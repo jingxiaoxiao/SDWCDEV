@@ -1,0 +1,34 @@
+language: node_js
+
+node_js:
+  - "node"
+
+cache:
+  yarn: true
+  directories:
+    - node_modules
+
+script:
+  - yarn test
+  - yarn build
+
+before_deploy:
+  - ls -Al
+  - mv assets dist/
+  - mv dist /tmp/
+  - ls -A | xargs rm -rf
+  - wget https://raw.githubusercontent.com/SB-IM/SDWC/gh-pages/config.json
+  - mv /tmp/dist/* .
+  - rmdir /tmp/dist
+  - ls -Al
+
+
+deploy:
+  provider: pages
+  fqdn: test.newbe.cc
+  skip-cleanup: true
+  github-token: $GITHUB_TOKEN
+  keep-history: false
+  on:
+    branch: dev
+

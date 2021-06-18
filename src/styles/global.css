@@ -1,0 +1,108 @@
+body {
+  margin: 0;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+}
+
+/* public status colors */
+.color--green {
+  color: #67c23a;
+}
+.color--blue {
+  /* override .el-notification .el-icon-info */
+  color: #409eff !important;
+}
+.color--orange {
+  color: #e6a23c;
+}
+.color--red {
+  color: #f56c6c;
+}
+.color--grey {
+  color: #606266;
+}
+
+/* Material Icons */
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('material-design-icons-iconfont/dist/fonts/MaterialIcons-Regular.woff2') format('woff2'),
+    url('material-design-icons-iconfont/dist/fonts/MaterialIcons-Regular.woff') format('woff');
+}
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga';
+}
+
+@media screen and (min-width: 1200px) { /* width > 1200, 部分双栏 */
+  /* container */
+  .plan,
+  .drone,
+  .depot {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  /* map */
+  .sd-map:not(.overview-map) .el-card__body {
+    height: calc(100% - 73px); /* 73 = 36 + 12*2 + 1 */
+  }
+  .sd-map .map__el {
+    height: 100%;
+  }
+
+  /* plan */
+  .plan .sd-card {
+    flex-basis: calc(50% - 2px);
+  }
+  .plan .term {
+    flex-basis: 100%;
+  }
+  .plan .plan__history {
+    flex-basis: 100%;
+  }
+
+  /* drone & depot */
+  .status,
+  .battery,
+  .control,
+  .debug {
+    width: 100%;
+  }
+
+  /* drone */
+  .drone .monitor,
+  .drone .sd-map {
+    width: calc(50% - 2px);
+  }
+
+  /* depot */
+  .depot .monitor {
+    width: calc(100% - 604px);
+  }
+  .depot .weather .el-card__body {
+    height: calc(100% - 73px);
+  }
+}
+
+@media screen and (min-width: 1580px) { /* width > 1580, 全部双栏 */
+  /* drone & depot */
+  .battery,
+  .control,
+  .debug {
+    width: calc(50% - 2px);
+  }
+}
