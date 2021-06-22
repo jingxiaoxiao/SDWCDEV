@@ -2,9 +2,6 @@ import wretch from 'wretch';
 
 let wr = wretch();
 
-// let BaseURL = 'https://cloud.sbnet.xyz/gosd';
-// let wr = wretch(BaseURL);
-
 export function setBaseURL(url = '') {
   wr = wr.url(url.replace(/\/$/, ''), true);
 }
@@ -18,8 +15,4 @@ export function config() {
     .json();
 }
 
-export function indexPlan() {
-  return wr.url('/api/v2/plans/')
-    .get()
-    .json();
-}
+

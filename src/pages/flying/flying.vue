@@ -175,6 +175,11 @@
       </div> 
     </div>
 
+    <!-- 测试数据 -->
+    <div class="cs">
+      {{mm}}
+    </div>
+
   </div>
   
 </template>
@@ -182,7 +187,6 @@
 <script>
 import { mapState, mapActions, mapGetters } from 'vuex';
 import SdMap from '@/components/map/map.vue';
-// import { parseTime } from "@/util/prometheus";
 let dateTime = new Date();
 export default {
   data() {
@@ -334,22 +338,30 @@ export default {
       return this.$refs.mySwiper.$swiper
     },
     ...mapState([
+      'node',
       'preference'
     ]),
     ...mapGetters([
       'depots',
       'drones'
     ]),
+    // 获取地图信息
+    mm(){
+      console.log('获取数据-depots', this.depots)
+      console.log('获取数据-drones', this.drones)
+      //  MqttClient.mqtt.publish(`plans/${this.planId}/term`);
+      return this.drones
+    }
   },
   created() {
     this.setPreference({ mapType });
+    
   },
   mounted() {
     this.swiper.slideTo(4, 1000, false)
     // this.getTianQi()
-    //   
-    console.log('获取数据-depots', this.depots)
-    console.log('获取数据-drones', this.drones)
+    //  
+   
   },
   methods: {
     fullScreen(){},
@@ -359,7 +371,7 @@ export default {
     onSlideChange() {
       console.log('slide change');
     },
-    // 时间
+    // 获取当前时间
     parseTime(time, pattern) {
       if (arguments.length === 0 || !time) {
         return null
@@ -399,22 +411,14 @@ export default {
       })
       return time_str
     },
-    //获取当地城市及天气
-    // async getTianQi(){
-    //   console.log('进入了')
-    //   var result = await import('http://wthrcdn.etouch.cn/weather_mini?city='+this.city)
-    //   console.log('城市天气', result.data.data.forecast)
-    //   this.City = result.data.data.forecast[0]
-    //   console.log('城市', result.data.data.forecast[0])
-    // },
+    
     // 地图
     ...mapActions([
       'setPreference'
     ]),
-   
 
-
-// 
+    // 
+    
    
 
   }
@@ -423,7 +427,15 @@ export default {
 </script>
 
 <style>
-
+.cs{
+  position:fixed;
+  left:20px;
+  top:120px;
+  width:1200px;
+  height:600px;
+  background-color: rebeccapurple;
+  color:#fff;
+}
 
 .fly-page{
   width:100%;

@@ -29,7 +29,9 @@
         <div class="suspend-item suspend-item2">
           <p class="item-title">距离下次巡检</p>
           <p class="uav-start">立即起飞</p>
-          <p class="item-time">12:00:00</p>
+          <p class="item-time">
+            {{hour}}:{{min}}:{{second}}
+          </p>
           <div class="item-lists clearfix">
             <div class="item-list" v-for="(list, index) in inspectList" :key="index">
               <span class="item-list-lab">{{list.inspectLab}}：</span>
@@ -250,6 +252,7 @@
 <script>
 import { mapActions, mapState } from 'vuex';
 import SdMap from '@/components/map/map.vue';
+import { indexPlan } from '@/api/sdwc';
 export default {
   data() {
     return {
@@ -358,6 +361,12 @@ export default {
               fullscreenToggle: true  //全屏按钮
           }
       },
+      // 巡检倒计时
+      day:'',
+      hour:'',
+      min:'',
+      second:'',
+      endDate:'2021-06-24 14:54:00', //结束日期
       // 巡检统计
       inspectList:[
         {
@@ -510,9 +519,57 @@ export default {
     
   },
   mounted () {
+    this.countTime()
+    this.getIndexPlan()
   },
   methods: {
     fullScreen(){},
+     // 倒计时
+    countTime() {
+      let now = new Date().getTime(); // 获取当前时间
+      let endDate = new Date(this.endDate); // 设置截止时间
+      let end = Number(endDate);
+      //let endDate = new Date(this.assistActivityEndTime); // this.assistActivityEndTime需要倒计时的日期
+      let leftTime = end - now;
+      // 定义变量 d,h,m,s保存倒计时的时间
+      if (leftTime >= 0) {
+        // 天
+        this.day = Math.floor(leftTime / 1000 / 60 / 60 / 24);
+        let dayh = this.day * 24
+        // 时
+        let h = Math.floor((leftTime / 1000 / 60 / 60) % 24);
+        h = h + dayh;
+        this.hour = h < 10 ? "0" + h : h;
+        // 分
+        let m = Math.floor((leftTime / 1000 / 60) % 60);
+        this.min = m < 10 ? "0" + m : m;
+        // 秒
+        let s = Math.floor((leftTime / 1000) % 60);
+        this.second = s < 10 ? "0" + s : s;
+
+        //console.log(this.day + "天" + this.hour + "时" + this.min + "分" + this.second);
+      } else {
+        this.day = 0;
+        this.hour = "00";
+        this.min = "00";
+        this.second = "00";
+      }
+      // 等于0的时候不调用
+      if (
+        Number(this.day) === 0 &&
+        Number(this.hour) === 0 &&
+        Number(this.min) === 0 &&
+        Number(this.second) === 0
+      ) {
+        this.flag = false;
+        this.$route.query.count = 4;
+        return;
+      } else {
+        // 递归每秒调用countTime方法，显示动态时间效果,
+        setTimeout(this.countTime, 1000);
+        this.flag = true;
+      }
+    },
     // 地图
     ...mapActions([
       'setPreference'
@@ -520,7 +577,13 @@ export default {
     handleMove() {},
     handleMarkerClick(id, el) {},
     handleClose() {},
-   
+    //  
+    async getIndexPlan(){
+      console.log('测试1')
+      const res = await indexPlan();
+      console.log('获取任务列', res)
+    }
+    // 
   },
   
 }
