@@ -31,86 +31,32 @@
           <p class="uav-start">立即起飞</p>
           <p class="item-time">12:00:00</p>
           <div class="item-lists clearfix">
-            <div class="item-list">
-              <span class="item-list-lab">累计任务数：</span>
+            <div class="item-list" v-for="(list, index) in inspectList" :key="index">
+              <span class="item-list-lab">{{list.inspectLab}}：</span>
               <div class="item-list-val">
-                <em>89</em><i>个</i>
+                <em>{{list.inspectVal}}</em><i>{{list.inspectUnit}}</i>
               </div>
             </div>
-            <div class="item-list">
-              <span class="item-list-lab">累计架次：</span>
-              <div class="item-list-val">
-                <em>128</em><i>架</i>
-              </div>
-            </div>
-            <div class="item-list">
-              <span class="item-list-lab">累计图像数：</span>
-              <div class="item-list-val">
-                <em>3258</em><i>张</i>
-              </div>
-            </div>
-            <div class="item-list">
-              <span class="item-list-lab">累计里程：</span>
-              <div class="item-list-val">
-                <em>24</em><i>km</i>
-              </div>
-            </div>
+           
           </div>
         </div>
         <div class="suspend-item suspend-item2">
           <p class="item-title">装备使用状态</p>
-          <div class="equip-item equip-item-bor">
+          <div :class="[index===0?'equip-item equip-item-bor':'equip-item']" v-for="(equip,index) in equipLIstanbul" :key="index">
             <div class="equip-area">
               <div class="equip-area-cont">
                 <img class="equip-area-icon" src="/assets/images/s-icon01.png">
-                <span class="equip-area-name">机场</span>
+                <span class="equip-area-name">{{equip.area}}</span>
               </div>
             </div>
             <div class="equip-cont">
-              <div class="equip-list">
-                <img class="equip-list-icon" src="/assets/images/sl-img01.png">
-                <p class="equip-list-name">电源正常</p>
-              </div>
-              <div class="equip-list">
-                <img class="equip-list-icon" src="/assets/images/sl-img02.png">
-                <p class="equip-list-name">网络正常</p>
-              </div>
-              <div class="equip-list">
-                <img class="equip-list-icon" src="/assets/images/sl-img03.png">
-                <p class="equip-list-name">起降正常</p>
-              </div>
-              <div class="equip-list">
-                <img class="equip-list-icon" src="/assets/images/sl-img04.png">
-                <p class="equip-list-name">充电正常</p>
+              <div class="equip-list" v-for="(sta, ind) in equip.statusList" :key="ind">
+                <img class="equip-list-icon" :src="sta.statusIcon">
+                <p class="equip-list-name">{{sta.statusName}}</p>
               </div>
             </div>
           </div>
-          <div class="equip-item">
-            <div class="equip-area">
-              <div class="equip-area-cont">
-                <img class="equip-area-icon" src="/assets/images/s-icon01.png">
-                <span class="equip-area-name">无人机</span>
-              </div>
-            </div>
-            <div class="equip-cont">
-              <div class="equip-list">
-                <img class="equip-list-icon" src="/assets/images/sl-img05.png">
-                <p class="equip-list-name">关机</p>
-              </div>
-              <div class="equip-list">
-                <img class="equip-list-icon" src="/assets/images/sl-img06.png">
-                <p class="equip-list-name">飞控</p>
-              </div>
-              <div class="equip-list">
-                <img class="equip-list-icon" src="/assets/images/sl-img01.png">
-                <p class="equip-list-name">电源充足</p>
-              </div>
-              <div class="equip-list">
-                <img class="equip-list-icon" src="/assets/images/sl-img07.png">
-                <p class="equip-list-name">吊舱</p>
-              </div>
-            </div>
-          </div>
+          
         </div>
         <div class="suspend-item suspend-item2">
           <p class="item-title">任务执行状态</p>
@@ -162,7 +108,14 @@
         <div class="suspend-right-con">
           <!-- 地图 -->
           <div class="suspend-map" id="map">
-             <sd-map
+            <sd-map
+                icon="map-marker"
+                class="overview-map"
+                title="map.satellite"
+                :polylines="polylines"
+                :markers="markers"
+              ></sd-map>
+             <!-- <sd-map
                 class="overview-map"
                 icon="map-marker"
                 title="common.overview"
@@ -174,7 +127,7 @@
                 @map-change="handleClose"
                 @marker-click="handleMarkerClick"
               >
-              </sd-map>
+              </sd-map> -->
 
           </div>
           <!-- 底部 -->
@@ -295,9 +248,8 @@
 </template>
 
 <script>
-
+import { mapActions, mapState } from 'vuex';
 import SdMap from '@/components/map/map.vue';
-
 export default {
   data() {
     return {
@@ -406,50 +358,171 @@ export default {
               fullscreenToggle: true  //全屏按钮
           }
       },
+      // 巡检统计
+      inspectList:[
+        {
+          inspectLab:'累计任务数',
+          inspectVal:89,
+          inspectUnit:'个'
+        },
+        {
+          inspectLab:'累计架次',
+          inspectVal:128,
+          inspectUnit:'架'
+        },
+        {
+          inspectLab:'累计图像数',
+          inspectVal:3258,
+          inspectUnit:'张'
+        },
+        {
+          inspectLab:'累计里程',
+          inspectVal:24,
+          inspectUnit:'km'
+        }
+      ],
+      // 装备状态
+      equipLIstanbul:[
+        {
+          area:'机场',
+          statusList:[
+            {
+              statusIcon:'/assets/images/sl-img01.png',
+              statusName:'电源正常',
+            },
+            {
+              statusIcon:'/assets/images/sl-img02.png',
+              statusName:'网络正常',
+            },
+            {
+              statusIcon:'/assets/images/sl-img03.png',
+              statusName:'起降正常',
+            },
+            {
+               statusIcon:'/assets/images/sl-img04.png',
+              statusName:'充电正常'
+            }
+          ]
+        },
+        {
+          area:'无人机',
+          statusList:[
+            {
+              statusIcon:'/assets/images/sl-img05.png',
+              statusName:'关机',
+            },
+            {
+              statusIcon:'/assets/images/sl-img06.png',
+              statusName:'飞控',
+            },
+            {
+              statusIcon:'/assets/images/sl-img01.png',
+              statusName:'电源充足',
+            },
+            {
+               statusIcon:'/assets/images/sl-img07.png',
+              statusName:'吊舱'
+            }
+          ]
+        }
+      ],
       // 地图
       markers:[
         {
-          id: 4,
-          name: "Depot",
-          position: {lng: 114.22475167, lat: 22.68580217},
-          type: "depot"
+          "id": "drone1",
+          "name": "飞机",
+          "type": "drone", // drone: 飞机，显示为可转向的箭头
+          "position": { "lng": 120, "lat": 30 },
+          "heading": 0 
+        },
+        {
+          "id": "depot1", 
+          "name": "机场",
+          "type": "depot", // depot：机场，显示为图钉形状的坐标点
+          "position": { "lng": 120, "lat": 31 } 
+        },
+        {
+          "id": "action3",
+          "type": "action", // 显示为圆形（一个字）或椭圆形（两个字及以上）的坐标点，中间可以显示文字
+          "position": { "lng": 121, "lat": 31 },
+          "action": ['replay','7k'] 
+        },
+        {
+          "id": "place4",
+          "name": "地点4", // 在旁边显示文字提示
+          "type": "place", // 其它类型，显示为图钉形状的坐标点，但可以指定颜色，比depot更灵活
+          "position": { "lng": 121, "lat": 30 }, 
+          "style": { "color": '#409eff' } // 可以填写 css 颜色名称或颜色值
         }
       ],
-      places:[],
-      fit:false,
-      styling:{},
-      type: '',
-      fit: true,
-      popover: {
-        show: false,
-        node: -1
-      }
+      polylines:[
+        {
+          "name": "line1", // 唯一id
+          "style": {
+            "stroke": "solid", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
+            "color": "#67c23a" // 折线颜色，可以填写 css 颜色名称或颜色值
+          },
+          "coordinates": [ // 折线上每个点的经纬度
+            { "lng": 120, "lat": 30 },
+            { "lng": 121, "lat": 31 }
+          ]
+        },
+        {
+          "name": "line2", // 唯一id
+          "style": {
+            "stroke": "dashed", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
+            "color": "#f69730" // 折线颜色，可以填写 css 颜色名称或颜色值
+          },
+          "coordinates": [ // 折线上每个点的经纬度
+            { "lng": 120, "lat": 30 },
+            { "lng": 120, "lat": 31 }
+          ]
+        },
+        {
+          "name": "line3", // 唯一id
+          "style": {
+            "stroke": "dotted", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
+            "color": "#409eff" // 折线颜色，可以填写 css 颜色名称或颜色值
+          },
+          "coordinates": [ // 折线上每个点的经纬度
+            { "lng": 120, "lat": 30 },
+            { "lng": 121, "lat": 30 }
+          ]
+        }
+      ],
+      // mapType
+      mapType: 'sd-map-mapbox'
     }
   },
-  computed: {
+  components: {
+    [SdMap.name]: SdMap
   },
-  methods: {
-    fullScreen(){},
-    // 地图
-
-    handleMove() {
-     
-    },
-    handleMarkerClick(id, el) {
-      
-    },
-    handleClose() {
-    },
-   
+  computed: {
+    ...mapState([
+      'preference'
+    ])
   },
   watch: {
    
   },
   created() {
+    this.setPreference({ mapType });
+    
   },
-  components: {
-    [SdMap.name]: SdMap
-  }
+  mounted () {
+  },
+  methods: {
+    fullScreen(){},
+    // 地图
+    ...mapActions([
+      'setPreference'
+    ]),
+    handleMove() {},
+    handleMarkerClick(id, el) {},
+    handleClose() {},
+   
+  },
+  
 }
 </script>
 
@@ -458,9 +531,10 @@ export default {
 /* 背景图加载有问题 */
 .overview-map {
   margin: 0;
+  height: 1016px;
 }
 .overview-map .el-card__body {
-  height: calc(100vh - 219px);
+  height: calc(100vh + 290px);
 }
 .overview-map .map__el {
   height: 100%;

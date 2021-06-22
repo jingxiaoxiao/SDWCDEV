@@ -1,10 +1,10 @@
 <template>
   <sd-card class="sd-map" :icon="icon" :title="title" dense>
     <template #action>
-      <slot name="action"></slot>
+      <!-- <slot name="action"></slot>
       <el-radio-group class="map__switch" size="small" v-model="type" @change="handleMapChange">
         <el-radio-button v-for="(value, key) of MapType" :key="key" :label="value">{{ key }}</el-radio-button>
-      </el-radio-group>
+      </el-radio-group> -->
     </template>
     <component :is="type" v-bind="$attrs" v-on="$listeners"></component>
   </sd-card>
@@ -53,8 +53,9 @@ export default {
       'setPreference'
     ]),
     handleMapChange(mapType) {
+      console.log('地图类型', mapType)
       this.$emit('map-change');
-      this.setPreference({ mapType });
+      // this.setPreference({ mapType });
     }
   },
   created() {
@@ -83,5 +84,9 @@ export default {
  */
 .sd--safari .map__el {
   -webkit-user-select: none;
+}
+/* 隐藏头部 */
+.el-card__header{
+  display:none;
 }
 </style>

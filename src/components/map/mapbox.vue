@@ -24,7 +24,7 @@ const GoogleRasterStyle = {
     google: {
       type: 'raster',
       tileSize: 256,
-      tiles: ['https://mt1.google.cn/maps/vt?lyrs=s&x={x}&y={y}&z={z}']
+      tiles: ['https://sb.im/google-maps/vt?lyrs=s&x={x}&y={y}&z={z}']
     }
   },
   layers: [{ id: 'GoogleRasterLayer', type: 'raster', source: 'google' }]

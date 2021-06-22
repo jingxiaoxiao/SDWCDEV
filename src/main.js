@@ -36,11 +36,13 @@ import 'video.js/dist/video-js.css'
 import VueAwesomeSwiper from 'vue-awesome-swiper'
 import 'swiper/swiper-bundle.css'
 
+
 Vue.use(JSONTreeView);
 
 Vue.use(VideoPlayer)
 
 Vue.use(VueAwesomeSwiper)
+
 
 const configurePromise = store.dispatch('configure');
 /**
@@ -111,7 +113,7 @@ if (__SDWC_DEV__) {
   // 'DEVELOPMENT' badge
   import(/* webpackChunkName: 'development' */ './styles/development.css');
   const el = document.createElement('div');
-  el.classList.add('development-ribbon');
+  // el.classList.add('development-ribbon'); //左上角图标
   document.body.append(el);
   // attach mqttclient to window
   import('@/api/mqtt').then(c => {

@@ -153,6 +153,7 @@ export function initializeMqtt({ state }) {
  */
 export async function getNodes({ commit }) {
   const data = await SuperDock.nodes();
+  console.log('这是nodes', data)
   data.sort((a, b) => a.id - b.id);
   data.forEach(node => {
     commit(NODE.ADD_NODE, node);

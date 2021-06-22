@@ -33,7 +33,7 @@
     <!-- 右侧时间 -->
     <div class="time-rgt">
       <div class="time-cont">
-        <span class="time-date">2021-06-06 09:10:28 星期一</span>
+        <span class="time-date">{{ parseTime(currentDate,'{y}-{m}-{d} {h}:{i}:{s} 星期{a}') }}</span>
         <img class="weather-icon" src="/assets/images/icon_sun.png">
       </div>
     </div>
@@ -125,48 +125,13 @@
                         @slideChange="onSlideChange"
                         >
                   <!-- slides -->
-                  <swiper-slide>
+                  <swiper-slide v-for="item in bannerList" :key="item.id">
                     <div class="img-pic">
-                      <img src="/assets/images/product-img02.jpg" alt="">
+                      <img :src="item.imgUrl" alt="">
                     </div>
-                    <p class="swiper-txt">2021-06-04 16:55:35</p>
+                    <p class="swiper-txt">{{item.time}}</p>
                   </swiper-slide>
-                  <swiper-slide>
-                    <div class="img-pic">
-                      <img src="/assets/images/product-img02.jpg" alt="">
-                    </div>
-                    <p class="swiper-txt">2021-06-04 16:55:35</p>
-                  </swiper-slide>
-                  <swiper-slide>
-                    <div class="img-pic">
-                      <img src="/assets/images/product-img02.jpg" alt="">
-                    </div>
-                    <p class="swiper-txt">2021-06-04 16:55:35</p>
-                  </swiper-slide>
-                  <swiper-slide>
-                    <div class="img-pic">
-                      <img src="/assets/images/product-img02.jpg" alt="">
-                    </div>
-                    <p class="swiper-txt">2021-06-04 16:55:35</p>
-                  </swiper-slide>
-                  <swiper-slide>
-                    <div class="img-pic">
-                      <img src="/assets/images/product-img02.jpg" alt="">
-                    </div>
-                    <p class="swiper-txt">2021-06-04 16:55:35</p>
-                  </swiper-slide>
-                  <swiper-slide>
-                    <div class="img-pic">
-                      <img src="/assets/images/product-img02.jpg" alt="">
-                    </div>
-                    <p class="swiper-txt">2021-06-04 16:55:35</p>
-                  </swiper-slide>
-                  <swiper-slide>
-                    <div class="img-pic">
-                      <img src="/assets/images/product-img02.jpg" alt="">
-                    </div>
-                    <p class="swiper-txt">2021-06-04 16:55:35</p>
-                  </swiper-slide>
+                  
                  
                     <!-- Optional controls -->
               <!--     <div class="swiper-button-prev" slot="button-prev"></div> -->
@@ -200,6 +165,13 @@
     <div class="small-map">
       <p class="map-coor">坐标：195,1828,282,5</p>
       <div id="container" ref="basicMapbox" class="amap">
+        <sd-map
+          icon="map-marker"
+          class="overview-small-map"
+          title="map.satellite"
+          :polylines="polylines"
+          :markers="markers"
+        ></sd-map>
       </div> 
     </div>
 
@@ -208,7 +180,10 @@
 </template>
 
 <script>
-
+import { mapState, mapActions, mapGetters } from 'vuex';
+import SdMap from '@/components/map/map.vue';
+// import { parseTime } from "@/util/prometheus";
+let dateTime = new Date();
 export default {
   data() {
     return {
@@ -255,20 +230,126 @@ export default {
           prevEl: '.swiper-button-prev',
         }
       },
-      // 
-      map: null,
-			positionLocation:  [117, 36]
+      bannerList:[
+        {
+          id:'001',
+          imgUrl:'/assets/images/product-img02.jpg',
+          time:'2021-06-04 16:55:35'
+        },
+         {
+          id:'002',
+          imgUrl:'/assets/images/product-img02.jpg',
+          time:'2021-06-04 16:55:35'
+        },
+         {
+          id:'003',
+          imgUrl:'/assets/images/product-img02.jpg',
+          time:'2021-06-04 16:55:35'
+        },
+         {
+          id:'004',
+          imgUrl:'/assets/images/product-img02.jpg',
+          time:'2021-06-04 16:55:35'
+        }, {
+          id:'005',
+          imgUrl:'/assets/images/product-img02.jpg',
+          time:'2021-06-04 16:55:35'
+        }
+      ],
+      // 当前日期
+      currentDate:dateTime,
+      // 地图
+      markers:[
+        {
+          "id": "drone1",
+          "name": "飞机",
+          "type": "drone", // drone: 飞机，显示为可转向的箭头
+          "position": { "lng": 120, "lat": 30 },
+          "heading": 0 
+        },
+        {
+          "id": "depot1", 
+          "name": "机场",
+          "type": "depot", // depot：机场，显示为图钉形状的坐标点
+          "position": { "lng": 120, "lat": 31 } 
+        },
+        {
+          "id": "action3",
+          "type": "action", // 显示为圆形（一个字）或椭圆形（两个字及以上）的坐标点，中间可以显示文字
+          "position": { "lng": 121, "lat": 31 },
+          "action": ['replay','7k'] 
+        },
+        {
+          "id": "place4",
+          "name": "地点4", // 在旁边显示文字提示
+          "type": "place", // 其它类型，显示为图钉形状的坐标点，但可以指定颜色，比depot更灵活
+          "position": { "lng": 121, "lat": 30 }, 
+          "style": { "color": '#409eff' } // 可以填写 css 颜色名称或颜色值
+        }
+      ],
+      polylines:[
+        {
+          "name": "line1", // 唯一id
+          "style": {
+            "stroke": "solid", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
+            "color": "#67c23a" // 折线颜色，可以填写 css 颜色名称或颜色值
+          },
+          "coordinates": [ // 折线上每个点的经纬度
+            { "lng": 120, "lat": 30 },
+            { "lng": 121, "lat": 31 }
+          ]
+        },
+        {
+          "name": "line2", // 唯一id
+          "style": {
+            "stroke": "dashed", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
+            "color": "#f69730" // 折线颜色，可以填写 css 颜色名称或颜色值
+          },
+          "coordinates": [ // 折线上每个点的经纬度
+            { "lng": 120, "lat": 30 },
+            { "lng": 120, "lat": 31 }
+          ]
+        },
+        {
+          "name": "line3", // 唯一id
+          "style": {
+            "stroke": "dotted", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
+            "color": "#409eff" // 折线颜色，可以填写 css 颜色名称或颜色值
+          },
+          "coordinates": [ // 折线上每个点的经纬度
+            { "lng": 120, "lat": 30 },
+            { "lng": 121, "lat": 30 }
+          ]
+        }
+      ],
+      // mapType
+      mapType: 'sd-map-mapbox'
     }
+  },
+  components: {
+    [SdMap.name]: SdMap
   },
   computed: {
     swiper() {
       return this.$refs.mySwiper.$swiper
-    }
+    },
+    ...mapState([
+      'preference'
+    ]),
+    ...mapGetters([
+      'depots',
+      'drones'
+    ]),
+  },
+  created() {
+    this.setPreference({ mapType });
   },
   mounted() {
     this.swiper.slideTo(4, 1000, false)
-    //  
-    this.initmap();  
+    // this.getTianQi()
+    //   
+    console.log('获取数据-depots', this.depots)
+    console.log('获取数据-drones', this.drones)
   },
   methods: {
     fullScreen(){},
@@ -278,234 +359,59 @@ export default {
     onSlideChange() {
       console.log('slide change');
     },
-
-    initmap() {
-      this.$mapboxgl.accessToken = "pk.eyJ1IjoibGlqaWFuZ2ppYW5namlhbmciLCJhIjoiY2s2b2czbmltMG14cDNkbXpldjhkd3c3ZiJ9.zBaMzJo2X2UVPyFTtd5hEQ";
-      
-      var map = new this.$mapboxgl.Map({
-        container: "container", // 绑定组件
-        //地图样式 卫星satellite-v9 街道streets-v11 streets-v9
-        style: "mapbox://styles/mapbox/streets-v11",
-        center: [12.550343, 55.665957], // 初始坐标系
-        zoom: 10, //地图初始的拉伸比例
-        layers: [
-          {
-            id: 'simple-tiles',
-            type: 'raster',
-            source: 'osm-tiles',
-            minzoom: 0,
-            maxzoom: 16
-          }
-        ]
+    // 时间
+    parseTime(time, pattern) {
+      if (arguments.length === 0 || !time) {
+        return null
+      }
+      const format = pattern || '{y}-{m}-{d} {h}:{i}:{s}'
+      let date
+      if (typeof time === 'object') {
+        date = time
+      } else {
+        if ((typeof time === 'string') && (/^[0-9]+$/.test(time))) {
+          time = parseInt(time)
+        } else if (typeof time === 'string') {
+          time = time.replace(new RegExp(/-/gm), '/');
+        }
+        if ((typeof time === 'number') && (time.toString().length === 10)) {
+          time = time * 1000
+        }
+        date = new Date(time)
+      }
+      const formatObj = {
+        y: date.getFullYear(),
+        m: date.getMonth() + 1,
+        d: date.getDate(),
+        h: date.getHours(),
+        i: date.getMinutes(),
+        s: date.getSeconds(),
+        a: date.getDay()
+      }
+      const time_str = format.replace(/{(y|m|d|h|i|s|a)+}/g, (result, key) => {
+        let value = formatObj[key]
+        // Note: getDay() returns 0 on Sunday
+        if (key === 'a') { return ['日', '一', '二', '三', '四', '五', '六'][value] }
+        if (result.length > 0 && value < 10) {
+          value = '0' + value
+        }
+        return value || 0
       })
-    
-      // 画波点
-      var size = 100;
- 
-      var pulsingDot = {
-        width: size,
-        height: size,
-        data: new Uint8Array(size * size * 4),
-        
-        onAdd: function() {
-          var canvas = document.createElement('canvas');
-          canvas.width = this.width;
-          canvas.height = this.height;
-          this.context = canvas.getContext('2d');
-        },
-        
-        render: function() {
-          var duration = 1000;
-          var t = (performance.now() % duration) / duration;
-          
-          var radius = size / 2 * 0.3;
-          var outerRadius = size / 2 * 0.7 * t + radius;
-          var context = this.context;
-          
-          // draw outer circle
-          context.clearRect(0, 0, this.width, this.height);
-          context.beginPath();
-          context.arc(this.width / 2, this.height / 2, outerRadius, 0, Math.PI * 2);
-          context.fillStyle = 'rgba(255, 200, 200,' + (1 - t) + ')';
-          context.fill();
-          
-          // draw inner circle
-          context.beginPath();
-          context.arc(this.width / 2, this.height / 2, radius, 0, Math.PI * 2);
-          context.fillStyle = 'rgba(255, 100, 100, 1)';
-          context.strokeStyle = 'white';
-          context.lineWidth = 2 + 4 * (1 - t);
-          context.fill();
-          context.stroke();
-          
-          // update this image's data with data from the canvas
-          this.data = context.getImageData(0, 0, this.width, this.height).data;
-          
-          // keep the map repainting
-          map.triggerRepaint();
-          
-          // return `true` to let the map know that the image was updated
-          return true;
-        }
-      };
-
-
-      // 添加飞行
-      map.on('load',()=>{
-        // map.flyTo({
-        //     center: [104.07, 30.67],
-        //     zoom: 5,
-        //     speed: 0.2,
-        //     curve: 2,
-        // })
-
-        // 
-        map.addImage('pulsing-dot', pulsingDot, { pixelRatio: 3 });
-        map.addLayer({
-          "id": "points",
-          "type": "symbol",
-          "source": {
-            "type": "geojson",
-            "data": {
-              "type": "FeatureCollection",
-              "features": [{
-                "type": "Feature",
-                "geometry": {
-                  "type": "Point",
-                  "coordinates": [12.550343, 55.665957] //点位置
-                }
-              }]
-            }
-          },
-          "layout": {
-            "icon-image": "pulsing-dot"
-          }
-        });
-        // 
-        map.addImage('pulsing-dot1', pulsingDot, { pixelRatio: 3 });
-        map.addLayer({
-          "id": "points1",
-          "type": "symbol",
-          "source": {
-            "type": "geojson",
-            "data": {
-              "type": "FeatureCollection",
-              "features": [{
-                "type": "Feature",
-                "geometry": {
-                  "type": "Point",
-                  "coordinates": [0, 0] //点位置
-                }
-              }]
-            }
-          },
-          "layout": {
-            "icon-image": "pulsing-dot1"
-          }
-        });
-        // 
-        mm = {
-          lngLat:{
-            lng:114.22475167,
-            lat:22.68580217
-          }
-          
-        }
-        this.plottingMarker(mm)
-        this.linePlotting(mm)
-        
-      
-      })
-    
-
-
-    // this.map = map
-    // this.InitLayer()
+      return time_str
     },
-    // 
-    /**
-     * InitLayer 构造函数
-     * mapbox初始化地图
-     */
-    initLayer(map){
-        this.map = map;
-        this.coordsLineArray = [];//存放经纬度
-        this.k = 0;//记录几个点
-
-    },
-    /**
-     * 绘制点图层
-     * 方法名 plottingMarker
-     * e 事件
-     *
-     */
-    plottingMarker(e){
-        let coords = [e.lngLat.lng,e.lngLat.lat];
-        let marker = new mapboxgl.Marker()
-        .setLngLat(coords)
-        .addTo(this.map)
-    },
-    /**
-     * 绘制线图层
-     * 方法名 linePlotting
-     * e 事件
-     */
-    linePlotting(e){
-        let geojsonLine = {
-            "type":"FeatureCollection",
-            "features":[]
-        }
-        let coords = [e.lngLat.lng,e.lngLat.lat];
-        this.coordsLineArray.push(coords);
-        let ele = document.createElement("div");
-        ele.className = "start_point";
-        if(this.coordsLineArray.length>1){
-            let htmlStr = "<p style='color:white;background-color:#434343;padding:2px 5px;'>终点</p>"
-            ele.innerHTML = htmlStr;
-        }else{
-            let htmlStr = "<p style='color:white;background-color:#434343;padding:2px 5px;'>起始点</p>" 
-            ele.innerHTML = htmlStr;
-        }
-        let options = {
-            element:ele,
-            anchor:0,
-            offset:[0,0]
-        }
-        new mapboxgl.Marker(options)
-        .setLngLat(coords)
-        .addTo(this.map)
-        if(this.coordsLineArray.length>1){
-            geojsonLine.features.push({
-                "type":"Feature",
-                "geometry":{
-                    "type":"LineString",
-                    "coordinates":this.coordsLineArray
-                }
-                
-            })
-            this.map.addSource("line_plotting"+this.k,{
-                "type":"geojson",
-                "data":geojsonLine
-            })
-            this.map.addLayer({
-                "id":"line_plottinf"+this.k,
-                "type":"line",
-                "source":"line_plotting"+this.k,
-                "layout":{
-                    "line-cap":"round",
-                    "line-json":"round"
-                },
-                "paint":{
-                    "line-color":"#ff4895",
-                    "line-width":2,
-                    "line-opacity":0.5
-                }
-            })
-            K++;
-            this.coordsLineArray = [];
-        }
-
-    }
+    //获取当地城市及天气
+    // async getTianQi(){
+    //   console.log('进入了')
+    //   var result = await import('http://wthrcdn.etouch.cn/weather_mini?city='+this.city)
+    //   console.log('城市天气', result.data.data.forecast)
+    //   this.City = result.data.data.forecast[0]
+    //   console.log('城市', result.data.data.forecast[0])
+    // },
+    // 地图
+    ...mapActions([
+      'setPreference'
+    ]),
+   
 
 
 // 
@@ -894,7 +800,9 @@ export default {
   width: 400px;
   height: 238px;
 }
-
+.overview-small-map{
+  height:238px;
+}
 
 
 .clearfix:before, .clearfix:after {
