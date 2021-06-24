@@ -115,3 +115,12 @@ export function uploadFile(files) {
     .post()
     .json();
 }
+
+/**
+ * 任务列表
+ */
+export function indexPlan() {
+  return wr.url('/api/v2/plans/')
+    .get()
+    .json();
+}

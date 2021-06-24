@@ -59,6 +59,30 @@
         :route="{ name: 'node', params: { id: depot.info.id } }"
       >{{ depot.info.name }}</el-menu-item>
     </el-submenu>
+
+    <!-- 页面 -->
+    <el-submenu index="sdwc">
+      <template #title>
+        <sd-icon value="satellite"></sd-icon>
+        <span slot="title" >页面</span>
+      </template>
+      <template v-for="item in pageList">
+         <el-menu-item
+          :key="item.info.id"
+          :index="`node-${item.info.id}`"
+          v-if="item.info.id === 1"
+          :route="{ name: 'flying', params: { id: item.info.id } }"
+        >{{ item.info.name }}</el-menu-item>
+        <el-menu-item
+          :key="item.info.id"
+          :index="`node-${item.info.id}`"
+          v-else-if="item.info.id === 2"
+          :route="{ name: 'suspend', params: { id: item.info.id } }"
+        >{{ item.info.name }}</el-menu-item>
+      </template>
+    </el-submenu>
+    
+
     <div class="aside__version">
       <span v-if="!collapse" class="aside__version-text">{{ version }}</span>
     </div>
@@ -79,7 +103,22 @@ export default {
   name: 'sd-aside',
   data() {
     return {
-      collapse: window.innerWidth < 1580
+      collapse: window.innerWidth < 1580,
+      // 页面导航
+      pageList:[
+        {
+          info:{
+            id:1,
+            name:'飞行'
+          }
+        },
+        {
+          info:{
+            id:2,
+            name:'暂停'
+          }
+        }
+      ],
     };
   },
   computed: {
@@ -108,6 +147,8 @@ export default {
           return `plan-${id}`;
         case 'plan/new':
           return 'plan-new';
+        case 'sdwc': // 页面选中
+          return 'sdwc';
       }
       return '';
     },

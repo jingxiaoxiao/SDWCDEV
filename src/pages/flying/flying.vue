@@ -63,11 +63,12 @@
             </div>
             <div class="data-li">
               <span class="data-label">相对高度：</span>
-              <p class="data-value"><em class="data-val">300</em><i class="data-unit">m</i></p>
+              <!-- {{droneHeight}} -->
+              <p class="data-value"><em class="data-val">{{droneHeight}}</em><i class="data-unit">m</i></p>
             </div>
             <div class="data-li">
               <span class="data-label">无人机剩余电量：</span>
-              <p class="data-value"><em class="data-val">99</em><i class="data-unit">%</i></p>
+              <p class="data-value"><em class="data-val">{{droneRemain}}</em><i class="data-unit">%</i></p>
             </div>
             <div class="data-li">
               <span class="data-label">垂直起降速度：</span>
@@ -79,7 +80,8 @@
             </div>
             <div class="data-li">
               <span class="data-label">水平飞行速度</span>
-              <p class="data-value"><em class="data-val">24</em><i class="data-unit">m/s</i></p>
+              <!-- {{droneSpeed}} -->
+              <p class="data-value"><em class="data-val">{{droneSpeed}}</em><i class="data-unit">m/s</i></p>
             </div>
             
           </div>
@@ -174,11 +176,9 @@
         ></sd-map>
       </div> 
     </div>
-
-    <!-- 测试数据 -->
-    <div class="cs">
-      {{mm}}
-    </div>
+    <!-- 测试 -->
+    {{droneId}}
+    
 
   </div>
   
@@ -187,6 +187,7 @@
 <script>
 import { mapState, mapActions, mapGetters } from 'vuex';
 import SdMap from '@/components/map/map.vue';
+import MqttClient from '@/api/mqtt';
 let dateTime = new Date();
 export default {
   data() {
@@ -263,69 +264,69 @@ export default {
       // 当前日期
       currentDate:dateTime,
       // 地图
-      markers:[
-        {
-          "id": "drone1",
-          "name": "飞机",
-          "type": "drone", // drone: 飞机，显示为可转向的箭头
-          "position": { "lng": 120, "lat": 30 },
-          "heading": 0 
-        },
-        {
-          "id": "depot1", 
-          "name": "机场",
-          "type": "depot", // depot：机场，显示为图钉形状的坐标点
-          "position": { "lng": 120, "lat": 31 } 
-        },
-        {
-          "id": "action3",
-          "type": "action", // 显示为圆形（一个字）或椭圆形（两个字及以上）的坐标点，中间可以显示文字
-          "position": { "lng": 121, "lat": 31 },
-          "action": ['replay','7k'] 
-        },
-        {
-          "id": "place4",
-          "name": "地点4", // 在旁边显示文字提示
-          "type": "place", // 其它类型，显示为图钉形状的坐标点，但可以指定颜色，比depot更灵活
-          "position": { "lng": 121, "lat": 30 }, 
-          "style": { "color": '#409eff' } // 可以填写 css 颜色名称或颜色值
-        }
-      ],
-      polylines:[
-        {
-          "name": "line1", // 唯一id
-          "style": {
-            "stroke": "solid", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
-            "color": "#67c23a" // 折线颜色，可以填写 css 颜色名称或颜色值
-          },
-          "coordinates": [ // 折线上每个点的经纬度
-            { "lng": 120, "lat": 30 },
-            { "lng": 121, "lat": 31 }
-          ]
-        },
-        {
-          "name": "line2", // 唯一id
-          "style": {
-            "stroke": "dashed", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
-            "color": "#f69730" // 折线颜色，可以填写 css 颜色名称或颜色值
-          },
-          "coordinates": [ // 折线上每个点的经纬度
-            { "lng": 120, "lat": 30 },
-            { "lng": 120, "lat": 31 }
-          ]
-        },
-        {
-          "name": "line3", // 唯一id
-          "style": {
-            "stroke": "dotted", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
-            "color": "#409eff" // 折线颜色，可以填写 css 颜色名称或颜色值
-          },
-          "coordinates": [ // 折线上每个点的经纬度
-            { "lng": 120, "lat": 30 },
-            { "lng": 121, "lat": 30 }
-          ]
-        }
-      ],
+      // markers:[
+      //   {
+      //     "id": "drone1",
+      //     "name": "飞机",
+      //     "type": "drone", // drone: 飞机，显示为可转向的箭头
+      //     "position": { "lng": 120, "lat": 30 },
+      //     "heading": 0 
+      //   },
+      //   {
+      //     "id": "depot1", 
+      //     "name": "机场",
+      //     "type": "depot", // depot：机场，显示为图钉形状的坐标点
+      //     "position": { "lng": 120, "lat": 31 } 
+      //   },
+      //   {
+      //     "id": "action3",
+      //     "type": "action", // 显示为圆形（一个字）或椭圆形（两个字及以上）的坐标点，中间可以显示文字
+      //     "position": { "lng": 121, "lat": 31 },
+      //     "action": ['replay','7k'] 
+      //   },
+      //   {
+      //     "id": "place4",
+      //     "name": "地点4", // 在旁边显示文字提示
+      //     "type": "place", // 其它类型，显示为图钉形状的坐标点，但可以指定颜色，比depot更灵活
+      //     "position": { "lng": 121, "lat": 30 }, 
+      //     "style": { "color": '#409eff' } // 可以填写 css 颜色名称或颜色值
+      //   }
+      // ],
+      // polylines:[
+      //   {
+      //     "name": "line1", // 唯一id
+      //     "style": {
+      //       "stroke": "solid", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
+      //       "color": "#67c23a" // 折线颜色，可以填写 css 颜色名称或颜色值
+      //     },
+      //     "coordinates": [ // 折线上每个点的经纬度
+      //       { "lng": 120, "lat": 30 },
+      //       { "lng": 121, "lat": 31 }
+      //     ]
+      //   },
+      //   {
+      //     "name": "line2", // 唯一id
+      //     "style": {
+      //       "stroke": "dashed", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
+      //       "color": "#f69730" // 折线颜色，可以填写 css 颜色名称或颜色值
+      //     },
+      //     "coordinates": [ // 折线上每个点的经纬度
+      //       { "lng": 120, "lat": 30 },
+      //       { "lng": 120, "lat": 31 }
+      //     ]
+      //   },
+      //   {
+      //     "name": "line3", // 唯一id
+      //     "style": {
+      //       "stroke": "dotted", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
+      //       "color": "#409eff" // 折线颜色，可以填写 css 颜色名称或颜色值
+      //     },
+      //     "coordinates": [ // 折线上每个点的经纬度
+      //       { "lng": 120, "lat": 30 },
+      //       { "lng": 121, "lat": 30 }
+      //     ]
+      //   }
+      // ],
       // mapType
       mapType: 'sd-map-mapbox'
     }
@@ -345,12 +346,148 @@ export default {
       'depots',
       'drones'
     ]),
-    // 获取地图信息
+    // 获取地图信息-测试
     mm(){
       console.log('获取数据-depots', this.depots)
       console.log('获取数据-drones', this.drones)
+      
+      console.log('获取数据-node', this.drones)
       //  MqttClient.mqtt.publish(`plans/${this.planId}/term`);
-      return this.drones
+      return this.depots
+    },
+    // 无人机点线
+    dronePlaceStyle() {
+      const style = {};
+      for (const d of this.drones) {
+        const mapPoint = d.info.points.find(p => p.point_type_name === 'map') || {};
+        style[d.info.id] = Object.assign({}, PlaceStyle, get(mapPoint, 'params.common.place', {}));
+      }
+      return style;
+    },
+    polylines() {
+      const polylines = [];
+      for (const d of this.drones) {
+        const { position, place } = d.msg;
+        if (d.status.code !== 0 || position.length <= 0 || Object.keys(place).length <= 0) continue;
+        const droneId = d.info.id;
+        const placeStyle = this.dronePlaceStyle[droneId];
+        const origin = position[0];
+        for (const [placeName, pos] of Object.entries(place)) {
+          const style = placeStyle[placeName] || {};
+          if (style.stroke) {
+            polylines.push({
+              name: `${droneId}_${placeName}`,
+              style,
+              coordinates: [origin, pos]
+            });
+          }
+        }
+      }
+      return polylines;
+    },
+    droneMarkers() {
+      const markers = [];
+      console.log('获取数据-无人机-drones', this.drones)
+      for (let d of this.drones) {
+        const position = d.msg.position[0];
+        if (d.status.code === 0 && typeof position === 'object') {
+          markers.push({
+            type: 'drone',
+            id: d.info.id,
+            name: d.info.name,
+            position,
+            heading: position.heading
+          });
+        }
+      }
+      return markers;
+    },
+    placeMarkers() {
+      const markers = [];
+      for (const d of this.drones) {
+        const { position, place } = d.msg;
+        if (d.status.code !== 0 || position.length <= 0 || Object.keys(place).length <= 0) continue;
+        const droneId = d.info.id;
+        const placeStyle = this.dronePlaceStyle[droneId];
+        for (const [placeName, pos] of Object.entries(place)) {
+          const style = placeStyle[placeName] || {};
+          markers.push({
+            type: 'place',
+            id: `${droneId}_${placeName}`,
+            name: placeName,
+            style: style,
+            position: pos
+          });
+        }
+      }
+      return markers;
+    },
+    depotMarkers() {
+      const markers = [];
+      for (const d of this.depots) {
+        const { code, status } = d.status;
+        if (code === 0) {
+          markers.push({
+            type: 'depot',
+            id: d.info.id,
+            name: d.info.name,
+            position: {
+              lng: +status.lng,
+              lat: +status.lat,
+            }
+          });
+        }
+      }
+      return markers;
+    },
+    markers() {
+      console.log('获取数据-无人机-markers', ...this.depotMarkers)
+      return [...this.depotMarkers, ...this.droneMarkers, ...this.placeMarkers];
+    },
+    // 无人机-电量占比
+    droneRemain() { 
+      let remainVal = undefined
+      for (let d of this.drones) {
+        remainVal = d.msg.battery.remain
+      }
+      console.log('获取数据-无人机-电量占比', remainVal)
+      return remainVal;
+    },
+    // 无人机-高度
+    droneHeight() {
+      let heightVal = undefined
+      for (let d of this.drones) {
+        heightVal = d.msg.drone_status.height
+      }
+      console.log('获取数据-无人机-高度', heightVal)
+      return heightVal;
+    },
+    // 无人机-飞行速度
+    droneSpeed() {
+      let speedVal = undefined
+      for (let d of this.drones) {
+        speedVal = d.msg.drone_status.speed
+      }
+      console.log('获取数据-无人机-msg', speedVal)
+      return speedVal;
+    },
+    // 无人机-信号
+    droneSignal() {
+      let signalVal = undefined
+      for (let d of this.drones) {
+        signalVal = d.msg.drone_status.signal
+      }
+      console.log('获取数据-无人机-msg', signalVal)
+      return signalVal;
+    },
+    // 无人机id
+    droneId() {
+      let droneOlny = undefined
+      for (let d of this.drones) {
+        droneOlny = d.info.id
+      }
+      console.log('获取数据-无人机-msg', droneOlny)
+      return droneOlny;
     }
   },
   created() {
@@ -359,9 +496,8 @@ export default {
   },
   mounted() {
     this.swiper.slideTo(4, 1000, false)
-    // this.getTianQi()
-    //  
-   
+    // 订阅测试c'c'c'c 
+   this.submm()
   },
   methods: {
     fullScreen(){},
@@ -417,7 +553,11 @@ export default {
       'setPreference'
     ]),
 
-    // 
+    // 订阅测试
+    submm() {
+     let subval = MqttClient.mqtt.subscribe(`plans/${this.droneId}/status`);
+     console.log('订阅测试-返回值', subval)
+    }
     
    
 
@@ -427,15 +567,6 @@ export default {
 </script>
 
 <style>
-.cs{
-  position:fixed;
-  left:20px;
-  top:120px;
-  width:1200px;
-  height:600px;
-  background-color: rebeccapurple;
-  color:#fff;
-}
 
 .fly-page{
   width:100%;
@@ -797,7 +928,8 @@ export default {
   bottom:260px;
   left: 24px;
   z-index: 2;
-  background: url('assets/images/bg.png')no-repeat center center rgba(255,255,255,0.1);
+  /* background: url('assets/images/bg.png')no-repeat center center rgba(255,255,255,0.1); */
+  background: url('assets/images/bg.png')no-repeat center center;
   background-size: contain;
 }
 .map-coor{
@@ -814,6 +946,7 @@ export default {
 }
 .overview-small-map{
   height:238px;
+  border-radius: 0 10px 0 10px;
 }
 
 

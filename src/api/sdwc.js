@@ -17,9 +17,3 @@ export function config() {
     .get()
     .json();
 }
-
-export function indexPlan() {
-  return wr.url('/api/v2/plans/')
-    .get()
-    .json();
-}

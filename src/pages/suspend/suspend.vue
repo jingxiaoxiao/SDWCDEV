@@ -252,7 +252,7 @@
 <script>
 import { mapActions, mapState } from 'vuex';
 import SdMap from '@/components/map/map.vue';
-import { indexPlan } from '@/api/sdwc';
+import { indexPlan } from '@/api/super-dock';
 export default {
   data() {
     return {
@@ -508,8 +508,14 @@ export default {
   },
   computed: {
     ...mapState([
+      'plan',
+      'air',
       'preference'
-    ])
+    ]),
+    plan() {
+      console.log('时长', this.plan)
+      console.log('巡检时间', this.air)
+    }
   },
   watch: {
    
@@ -579,7 +585,6 @@ export default {
     handleClose() {},
     //  
     async getIndexPlan(){
-      console.log('测试1')
       const res = await indexPlan();
       console.log('获取任务列', res)
     }
