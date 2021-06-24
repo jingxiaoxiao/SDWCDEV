@@ -1,5 +1,6 @@
 <template>
   <div class="drone">
+    <!-- 无人机页面 -->
     <template v-for="{ point, compo, key } of points">
       <component
         :is="compo"

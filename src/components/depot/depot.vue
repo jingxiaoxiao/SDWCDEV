@@ -1,5 +1,6 @@
 <template>
   <div class="depot">
+    <!-- 机场页面 -->
     <template v-for="{ point, compo, key } of points">
       <component :is="compo" :key="key" :point="point" :status="node.status" :msg="node.msg"></component>
     </template>

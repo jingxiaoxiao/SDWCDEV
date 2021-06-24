@@ -26,7 +26,7 @@
     <div class="inspect-lft">
       <div class="inspect-cont">
         <img class="inspect-icon" src="/assets/images/icon_time_full.png">
-        <span>当前巡检：</span><em>09:10:28</em>
+        <span>当前巡检：</span><em>{{duration}}</em>
       </div>
     </div>
 
@@ -39,17 +39,28 @@
     </div>
 
     <!-- 中间信号 -->
-    <div class="signal-info">
+    <!-- <div class="signal-info">
       <div class="signal-cont">
-        <span>信号强度：</span>
+        <span class="signal-label">信号强度：</span>
         <img class="uav-icon" src="/assets/images/uav-icon.png">
+        <div class="signal-contion">
+          <div class="signal-con">
+            <span :class="[droneSignal>=1?'signal-one signal-on':'signal-one']"></span>
+            <span :class="[droneSignal>=2?'signal-two signal-on':'signal-two']"></span>
+            <span :class="[droneSignal>=3?'signal-three signal-on':'signal-three']"></span>
+            <span :class="[droneSignal>=4?'signal-four signal-on':'signal-four']"></span>
+            <span :class="[droneSignal>=5?'signal-five signal-on':'signal-five']"></span>
+          </div>
+        </div>
         <img class="signal-icon" src="/assets/icons/signal.svg">
         <img class="control-icon" src="/assets/images/control-icon.png">
         <img class="signal-icon" src="/assets/icons/signal.svg">
-        <img class="monitor-icon" src="/assets/images/icon_camera_line.png">
+        <img class="monitor-icon" src="/assets/icons/satellite.svg">
+        <span class="signal-icon">{{gpsObj.satcount}}星</span>
+        <span class="signal-icon">{{gpsObj.type}}</span>
         <img class="signal-icon" src="/assets/icons/signal.svg">
       </div>
-    </div>
+    </div> -->
     
     <!-- 底部 -->
     <div class="botm-wrap clearfix">
@@ -58,8 +69,8 @@
         <div class="btm-lft">
           <div class="data clearfix">
             <div class="data-li">
-              <span class="data-label">离机巢剩余距离：</span>
-              <p class="data-value"><em class="data-val">300</em><i class="data-unit">m</i></p>
+              <span class="data-label">速度：</span>
+              <p class="data-value"><em class="data-val">{{droneSpeed}}</em><i class="data-unit">m/s</i></p>
             </div>
             <div class="data-li">
               <span class="data-label">相对高度：</span>
@@ -67,21 +78,20 @@
               <p class="data-value"><em class="data-val">{{droneHeight}}</em><i class="data-unit">m</i></p>
             </div>
             <div class="data-li">
-              <span class="data-label">无人机剩余电量：</span>
+              <span class="data-label">电量：</span>
               <p class="data-value"><em class="data-val">{{droneRemain}}</em><i class="data-unit">%</i></p>
             </div>
             <div class="data-li">
-              <span class="data-label">垂直起降速度：</span>
-              <p class="data-value"><em class="data-val">24</em><i class="data-unit">m/s</i></p>
+              <span class="data-label">电压：</span>
+              <p class="data-value"><em class="data-val">{{droneVoltage}}</em><i class="data-unit">V</i></p>
             </div>
             <div class="data-li">
-              <span class="data-label">变焦倍数</span>
-              <p class="data-value"><em class="data-val">10</em><i class="data-unit">倍</i></p>
+              <span class="data-label">信号强度</span>
+              <p class="data-value"><em class="data-val">{{droneSignal}}</em><i class="data-unit">%</i></p>
             </div>
             <div class="data-li">
-              <span class="data-label">水平飞行速度</span>
-              <!-- {{droneSpeed}} -->
-              <p class="data-value"><em class="data-val">{{droneSpeed}}</em><i class="data-unit">m/s</i></p>
+              <span class="data-label">GPS</span>
+              <p class="data-value"><em class="data-val"> {{gpsObj.satcount}}</em><i class="data-unit">星{{gpsObj.type}}</i></p>
             </div>
             
           </div>
@@ -188,6 +198,7 @@
 import { mapState, mapActions, mapGetters } from 'vuex';
 import SdMap from '@/components/map/map.vue';
 import MqttClient from '@/api/mqtt';
+import Monitor from '@/components/drone/monitor.vue';
 let dateTime = new Date();
 export default {
   data() {
@@ -444,6 +455,21 @@ export default {
       console.log('获取数据-无人机-markers', ...this.depotMarkers)
       return [...this.depotMarkers, ...this.droneMarkers, ...this.placeMarkers];
     },
+    // 当前巡检 = 时长
+    duration() {
+      let time = undefined
+      const options = {
+        timeZone: 'UTC',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      };
+      for (let d of this.drones) {
+        time = d.msg.drone_status.time;
+      }
+      if (time >= 3600) options.hour = 'numeric';
+      return new Date(time * 1000).toLocaleString('en-US', options);
+    },
     // 无人机-电量占比
     droneRemain() { 
       let remainVal = undefined
@@ -478,7 +504,38 @@ export default {
         signalVal = d.msg.drone_status.signal
       }
       console.log('获取数据-无人机-msg', signalVal)
+      let signalNum = undefined
+      // 五条信号显示个数
+      // if(signalVal<=20){
+      //   signalNum = 1
+      // } else if(20<signalVal<=40){
+      //   signalNum = 2
+      // } else if(40<signalVal<=60){
+      //   signalNum = 3
+      // } else if(60<signalVal<=80){
+      //   signalNum = 4
+      // } else if(80<signalVal){
+      //   signalNum = 5
+      // }
       return signalVal;
+    },
+    // gps
+    gpsObj() {
+      let gpsObj = {}
+      for (let d of this.drones) {
+        gpsObj.type = d.msg.drone_status.gps.type
+        gpsObj.satcount = d.msg.drone_status.gps.satcount
+      }
+      return gpsObj
+    },
+    // 无人机-电压
+    droneVoltage() {
+      let voltageVal = undefined
+      for (let d of this.drones) {
+        voltageVal = d.msg.drone_status.battery.voltage
+      }
+      console.log('获取数据-无人机-电压', voltageVal)
+      return voltageVal;
     },
     // 无人机id
     droneId() {
@@ -488,7 +545,8 @@ export default {
       }
       console.log('获取数据-无人机-msg', droneOlny)
       return droneOlny;
-    }
+    },
+    
   },
   created() {
     this.setPreference({ mapType });
@@ -641,14 +699,72 @@ export default {
   justify-content: center;
   align-items: center;
 }
+.signal-label{
+  width:70px;
+  flex-shrink: 0;
+}
 .monitor-icon{
   width:20px;
   flex-shrink: 0;
 }
 .signal-icon{
+  /* width: 18px; */
+  flex-shrink:0;
+  margin:0 8px 0 2px;
+}
+.signal-contion{
   width: 18px;
   flex-shrink:0;
   margin:0 8px 0 2px;
+}
+.signal-con{
+  display:flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+.signal-one{
+  width:2px;
+  height:3px;
+  margin:0 1px 0 0;
+  background-color: #dcdcdc;
+  box-shadow: 0 0 2px #c6d4df;
+  flex: 1;
+}
+.signal-two{
+  width:2px;
+  height:6px;
+  margin:0 1px 0 0;
+  background-color: #dcdcdc;
+  box-shadow: 0 0 2px #c6d4df;
+  flex: 1;
+}
+.signal-three{
+  width:2px;
+  height:9px;
+  margin:0 1px 0 0;
+  background-color: #dcdcdc;
+  box-shadow: 0 0 2px #c6d4df;
+  flex: 1;
+}
+.signal-four{
+  width:2px;
+  height:12px;
+  margin:0 1px 0 0;
+  background-color: #dcdcdc;
+  box-shadow: 0 0 2px #c6d4df;
+  flex: 1;
+}
+.signal-five{
+  width:2px;
+  height:15px;
+  margin:0 1px 0 0;
+  background-color: #dcdcdc;
+  box-shadow: 0 0 2px #c6d4df;
+  flex: 1;
+}
+.signal-on{
+  background-color: #a5d0ac;
+  box-shadow: 0 0 2px #a5d0ac;
 }
 .time-rgt{
   position: fixed;

@@ -11,7 +11,7 @@
     <div class="inspect-lft">
       <div class="inspect-cont">
         <img class="inspect-icon" src="/assets/images/icon_time_full.png">
-        <span>当前巡检：</span><em>09:10:28</em>
+        <span>当前巡检：</span><em>{{duration}}</em>
       </div>
     </div>
 
@@ -250,7 +250,7 @@
 </template>
 
 <script>
-import { mapActions, mapState } from 'vuex';
+import { mapActions, mapState, mapGetters } from 'vuex';
 import SdMap from '@/components/map/map.vue';
 import { indexPlan } from '@/api/super-dock';
 export default {
@@ -508,13 +508,30 @@ export default {
   },
   computed: {
     ...mapState([
+      'node',
       'plan',
-      'air',
       'preference'
     ]),
-    plan() {
-      console.log('时长', this.plan)
-      console.log('巡检时间', this.air)
+    ...mapGetters([
+      'drones'
+    ]),
+    // 当前巡检 = 时长
+    droneVal() {
+      return this.drones[0].info.id
+    },
+    selectedNode() {
+      return this.node.find(node => node.info.id === this.droneVal);
+    },
+    duration() {
+      const { time } = this.selectedNode.msg.drone_status;
+      const options = {
+        timeZone: 'UTC',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      };
+      if (time >= 3600) options.hour = 'numeric';
+      return new Date(time * 1000).toLocaleString('en-US', options); 
     }
   },
   watch: {

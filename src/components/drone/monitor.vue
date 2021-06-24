@@ -234,6 +234,7 @@ export default {
       return this.status.code !== 0;
     },
     videoSources() {
+      console.log('视频元', this.point)
       const params = this.point.params || { source: [] };
       return params.source;
     },
