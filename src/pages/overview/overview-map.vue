@@ -98,7 +98,6 @@ export default {
     },
     droneMarkers() {
       const markers = [];
-      console.log('无人机', this.drones)
       for (let d of this.drones) {
         const position = d.msg.position[0];
         if (d.status.code === 0 && typeof position === 'object') {

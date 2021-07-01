@@ -6,12 +6,23 @@
     </el-form-item>
     <el-form-item>
       <span slot="label" v-t="'plan.desc'"></span>
-      <el-input
+      <!-- <el-input
         type="textarea"
         :rows="2"
         :placeholder="$t('plan.edit.desc_inp')"
         v-model="plan.description"
+      ></el-input> -->
+      <el-input
+        type="number"
+        v-model="plan.description"
+        :min="0" 
+        :max="24" 
       ></el-input>
+      <!-- <el-input-number 
+        v-model="plan.description" 
+        :min="1" 
+        :max="24" 
+        ></el-input-number> -->
     </el-form-item>
     <el-form-item>
       <span slot="label" v-t="'plan.air'"></span>
@@ -54,6 +65,8 @@ export default {
   },
   methods: {
     getPlan() {
+      this.plan.description = this.plan.description.toString()
+      console.log('传入的时间值是：', this.plan)
       return this.plan;
     },
     handleWaypointChange(file) {

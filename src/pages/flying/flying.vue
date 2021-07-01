@@ -1,8 +1,12 @@
 <template>
   <div class="fly-page">
-    <!-- 视频 -->
+    <!-- 视频、地图切换按钮 -->
+    <div class="uav-start-fly" @click="goSuspend">
+      <span>停飞页面</span>
+    </div>
+    <!-- 地图、视频 大屏幕 -->
     <div class="video-wrap">
-      <video-player class="video-player vjs-custom-skin"
+      <!-- <video-player class="video-player vjs-custom-skin"
                   ref="videoPlayer"
                   :playsinline="true"
                   style="object-fit:fill"
@@ -11,7 +15,73 @@
                   @pause="onPlayerPause($event)"
                   @play="onPlayerPlay($event)"
                   @fullscreenchange="onFullscreenChange($event)"
-                  @click="fullScreen" />
+                  @click="fullScreen" /> -->
+     
+     
+      <template v-if="videoBigShow">
+        <!-- 视频 cs -->
+        <template v-for="{ point, compo, key } of points">
+          <component
+            :is="compo"
+            :key="key"
+            :info="nodeObj.info"
+            :point="point"
+            :status="nodeObj.status"
+            :msg="nodeObj.msg"
+            :starTime="starTime"
+            :flyDuration="flyDuration"
+            :landTime="landTime"
+            :videoBigShow="videoBigShow"
+          ></component>
+        </template>
+      </template>
+      <template v-else>
+        <div id="container" ref="basicMapbox" class="amap">
+          <sd-map
+            icon="map-marker"
+            class="overview-small-map"
+            title="map.satellite"
+            :polylines="polylines"
+            :markers="markers"
+          ></sd-map>
+        </div> 
+      </template>
+     
+    </div>
+
+    <!-- 小地图、视频 小屏幕 -->
+    <div class="small-map">
+      <template v-if="videoBigShow">
+        <p class="map-coor"  @click="handleChage">坐标：{{lngLatObj.lng}},{{lngLatObj.lat}}</p>
+        <div id="container" ref="basicMapbox" class="amap">
+          <sd-map
+            icon="map-marker"
+            class="overview-small-map"
+            title="map.satellite"
+            :polylines="polylines"
+            :markers="markers"
+          ></sd-map>
+        </div> 
+      </template>
+      <template v-else>
+        <p class="map-coor" @click="handleChage">视频</p>
+        <!-- 视频 cs -->
+        <template v-for="{ point, compo, key } of points">
+          <component
+            :is="compo"
+            :key="key"
+            :info="nodeObj.info"
+            :point="point"
+            :status="nodeObj.status"
+            :msg="nodeObj.msg"
+            :starTime="starTime"
+            :flyDuration="flyDuration"
+            :landTime="landTime"
+            :videoBigShow="videoBigShow"
+          ></component>
+        </template>
+      </template>
+      
     </div>
 
     <!-- 头部 -->
@@ -34,7 +104,9 @@
     <div class="time-rgt">
       <div class="time-cont">
         <span class="time-date">{{ parseTime(currentDate,'{y}-{m}-{d} {h}:{i}:{s} 星期{a}') }}</span>
-        <img class="weather-icon" src="/assets/images/icon_sun.png">
+        <!-- <img class="weather-icon" src="/assets/images/icon_sun.png"> -->
+         <span class="weather-icon-txt">{{weatherTxt}}</span>
+        
       </div>
     </div>
 
@@ -62,7 +134,9 @@
       </div>
     </div> -->
     
-    <!-- 底部 -->
+    
+
+     <!-- 底部 -->
     <div class="botm-wrap clearfix">
       <div class="botm-con">
         
@@ -74,7 +148,6 @@
             </div>
             <div class="data-li">
               <span class="data-label">相对高度：</span>
-              <!-- {{droneHeight}} -->
               <p class="data-value"><em class="data-val">{{droneHeight}}</em><i class="data-unit">m</i></p>
             </div>
             <div class="data-li">
@@ -98,30 +171,68 @@
         </div>
         <div class="botm-cont">
             <div class="process">
-              <span class="process-star process-end"></span>
-              <span class="process-line end"></span>
-              <span class="process-star process-curr"></span>
-              <span class="process-line"></span>
-              <span class="process-star"></span>
-              <span class="process-line"></span>
-              <span class="process-star"></span>
+              <template v-if="flyStatus === 1">
+                <span class="process-star process-curr"></span>
+                <span class="process-line"></span>
+                <span class="process-star"></span>
+                <span class="process-line"></span>
+                <span class="process-star"></span>
+                <span class="process-line"></span>
+                <span class="process-star"></span>
+              </template>
+              <template v-else-if="flyStatus === 2">
+                <span class="process-star process-end"></span>
+                <span class="process-line end"></span>
+                <span class="process-star process-curr"></span>
+                <span class="process-line"></span>
+                <span class="process-star"></span>
+                <span class="process-line"></span>
+                <span class="process-star"></span>
+              </template>
+              <template v-else-if="flyStatus === 3">
+                <span class="process-star process-end"></span>
+                <span class="process-line end"></span>
+                <span class="process-star process-end"></span>
+                <span class="process-line end"></span>
+                <span class="process-star process-curr" ></span>
+                <span class="process-line"></span>
+                <span class="process-star"></span>
+              </template>
+              <template v-else-if="flyStatus === 4">
+                <span class="process-star process-end"></span>
+                <span class="process-line end"></span>
+                <span class="process-star process-end"></span>
+                <span class="process-line end"></span>
+                <span class="process-star process-end" ></span>
+                <span class="process-line end"></span>
+                <span class="process-star process-curr"></span>
+              </template>
+              <template v-else>
+                <span class="process-star"></span>
+                <span class="process-line"></span>
+                <span class="process-star"></span>
+                <span class="process-line"></span>
+                <span class="process-star"></span>
+                <span class="process-line"></span>
+                <span class="process-star"></span>
+              </template>
             </div>
             <div class="process-txt clearfix">
               <div class="process-txt-li">
-                <p class="status">下达任务</p>
-                <p class="time">2021-06-04 16:55:35</p>
+                <p :class="flyStatus===1?'status curr':'status'">下达任务</p>
+                <p class="time">{{parseTime((new Date()),'{y}-{m}-{d}')}} {{execute.executeTime}}</p>
               </div>
               <div class="process-txt-li">
-                  <p class="status curr">起飞</p>
-                  <p class="time">2021-06-04 16:55:35</p>
+                  <p :class="flyStatus===2?'status curr':'status'">起飞</p>
+                  <p class="time">{{starTime}}</p>
               </div>
               <div class="process-txt-li">
-                  <p class="status">返航</p>
-                  <p class="time">预计10分钟</p>
+                  <p :class="flyStatus===3?'status curr':'status'">返航</p>
+                  <p class="time">{{landTime}}</p>
               </div>
               <div class="process-txt-li">
-                  <p class="status">降落</p>
-                  <p class="time">预计20分钟</p>
+                  <p :class="flyStatus===4?'status curr':'status'">降落</p>
+                  <p class="time">{{flyDuration}}</p>
               </div>
             </div>
             <!-- banner -->
@@ -137,17 +248,15 @@
                         @slideChange="onSlideChange"
                         >
                   <!-- slides -->
-                  <swiper-slide v-for="item in bannerList" :key="item.id">
+                  <swiper-slide v-for="item in bannerList" :key="item.id">
                     <div class="img-pic">
                       <img :src="item.imgUrl" alt="">
                     </div>
                     <p class="swiper-txt">{{item.time}}</p>
-                  </swiper-slide>
-                  
-                 
-                    <!-- Optional controls -->
-              <!--     <div class="swiper-button-prev" slot="button-prev"></div> -->
-              <!--     <div class="swiper-button-next" slot="button-next"></div> -->
+                  </swiper-slide>             
+                  <!-- Optional controls -->
+                  <!-- <div class="swiper-button-prev" slot="button-prev"></div> -->
+                  <!--<div class="swiper-button-next" slot="button-next"></div> -->
                 </swiper>
                 <!-- <div class="swiper-button-next" slot="button-next"></div> -->
               </div>
@@ -155,40 +264,31 @@
         </div>
       
         <div class="btm-rgt clearfix">
-          <div class="center-control">
-            <img class="control-poit control-top" src="/assets/images/Polygon1.png" alt="">
-            <img class="control-poit control-bottom" src="/assets/images/Polygon2.png" alt="">
-            <img class="control-poit control-left" src="/assets/images/Polygon3.png" alt="">
-            <img class="control-poit control-right" src="/assets/images/Polygon4.png" alt="">
-            <img class="control-ok" src="/assets/images/Polygon-ok.png" alt="">
-          </div>
-          <div class="btm-btn">
-            <div class="btm-btn-item">其他设置</div>
-            <div class="btm-btn-item">拍照</div>
-            <div class="btm-btn-item">开始录像</div>
-            <div class="btm-btn-item btm-btn-over">结束录像</div>
+          <!-- {{points}} -->
+          <template v-for="{ point, compo, key } of points">
+            <div :key="key">
+              <template>
+                <operation 
+                  v-if="compo!=''"
+                  :point="point" 
+                  :status="nodeObj.status"
+                  :msg="nodeObj.msg"
+                  :videoBigShow="videoBigShow">
+                </operation>
+              </template>
+            </div>
+          </template>
 
-          </div>
         </div>
       </div>
     </div>
-   
-    <!-- 小地图 -->
-    <div class="small-map">
-      <p class="map-coor">坐标：195,1828,282,5</p>
-      <div id="container" ref="basicMapbox" class="amap">
-        <sd-map
-          icon="map-marker"
-          class="overview-small-map"
-          title="map.satellite"
-          :polylines="polylines"
-          :markers="markers"
-        ></sd-map>
-      </div> 
-    </div>
-    <!-- 测试 -->
-    {{droneId}}
+
     
+    <!-- 测试 -->
+    <!-- {{droneId}} -->
+    
+    <!-- 测试图片 -->
+    <sd-job-file ref="jobFile"></sd-job-file>
 
   </div>
   
@@ -198,8 +298,45 @@
 import { mapState, mapActions, mapGetters } from 'vuex';
 import SdMap from '@/components/map/map.vue';
 import MqttClient from '@/api/mqtt';
-import Monitor from '@/components/drone/monitor.vue';
 let dateTime = new Date();
+
+// 视频 cs
+// import Control from '@/components/drone/control.vue';
+// import Monitor from '@/components/drone/video.vue';
+// import DroneMap from '@/components/drone/map.vue';
+import Custom from '@/components/custom/custom.vue';
+import Settings from '@/components/settings/settings.vue';
+
+import Monitor from '@/components/drone/video2.vue';
+import Operation from '@/components/drone/operation.vue';
+
+import { getPlanJobs } from '@/api/super-dock';
+import JobFile from '@/components/job-file/job-file.vue';
+
+const CompoName = {
+  // 'map': DroneMap.name,
+  'custom': Custom.name,
+  // 'console': Control.name,
+  'settings': Settings.name,
+  'iframe': Monitor.name,
+  'livestream_img': Monitor.name,
+  'livestream_flv': Monitor.name,
+  'livestream_hls': Monitor.name,
+  'livestream_webrtc': Monitor.name,
+  'livestream_webrtc2': Monitor.name,
+  'livestream_webrtc3': Monitor.name,
+  'livestream_webrtc4': Monitor.name
+};
+
+const CompoOrder = {
+  [Monitor.name]: 2,
+  // [DroneMap.name]: 3,
+  [Custom.name]: 6,
+  // [Control.name]: 9,
+  [Settings.name]: 10,
+};
+
+
 export default {
   data() {
     return {
@@ -230,6 +367,7 @@ export default {
               fullscreenToggle: true  //全屏按钮
           }
       },
+       // banner
       swiperOption: {
         slidesPerView:4,
         simulateTouch:true,
@@ -274,84 +412,51 @@ export default {
       ],
       // 当前日期
       currentDate:dateTime,
-      // 地图
-      // markers:[
-      //   {
-      //     "id": "drone1",
-      //     "name": "飞机",
-      //     "type": "drone", // drone: 飞机，显示为可转向的箭头
-      //     "position": { "lng": 120, "lat": 30 },
-      //     "heading": 0 
-      //   },
-      //   {
-      //     "id": "depot1", 
-      //     "name": "机场",
-      //     "type": "depot", // depot：机场，显示为图钉形状的坐标点
-      //     "position": { "lng": 120, "lat": 31 } 
-      //   },
-      //   {
-      //     "id": "action3",
-      //     "type": "action", // 显示为圆形（一个字）或椭圆形（两个字及以上）的坐标点，中间可以显示文字
-      //     "position": { "lng": 121, "lat": 31 },
-      //     "action": ['replay','7k'] 
-      //   },
-      //   {
-      //     "id": "place4",
-      //     "name": "地点4", // 在旁边显示文字提示
-      //     "type": "place", // 其它类型，显示为图钉形状的坐标点，但可以指定颜色，比depot更灵活
-      //     "position": { "lng": 121, "lat": 30 }, 
-      //     "style": { "color": '#409eff' } // 可以填写 css 颜色名称或颜色值
-      //   }
-      // ],
-      // polylines:[
-      //   {
-      //     "name": "line1", // 唯一id
-      //     "style": {
-      //       "stroke": "solid", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
-      //       "color": "#67c23a" // 折线颜色，可以填写 css 颜色名称或颜色值
-      //     },
-      //     "coordinates": [ // 折线上每个点的经纬度
-      //       { "lng": 120, "lat": 30 },
-      //       { "lng": 121, "lat": 31 }
-      //     ]
-      //   },
-      //   {
-      //     "name": "line2", // 唯一id
-      //     "style": {
-      //       "stroke": "dashed", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
-      //       "color": "#f69730" // 折线颜色，可以填写 css 颜色名称或颜色值
-      //     },
-      //     "coordinates": [ // 折线上每个点的经纬度
-      //       { "lng": 120, "lat": 30 },
-      //       { "lng": 120, "lat": 31 }
-      //     ]
-      //   },
-      //   {
-      //     "name": "line3", // 唯一id
-      //     "style": {
-      //       "stroke": "dotted", // 折线样式，可为 solid：实线，dotted：圆点虚线，dashed：短线段虚线
-      //       "color": "#409eff" // 折线颜色，可以填写 css 颜色名称或颜色值
-      //     },
-      //     "coordinates": [ // 折线上每个点的经纬度
-      //       { "lng": 120, "lat": 30 },
-      //       { "lng": 121, "lat": 30 }
-      //     ]
-      //   }
-      // ],
       // mapType
-      mapType: 'sd-map-mapbox'
+      mapType: 'sd-map-mapbox',
+      // 停飞页面传来值
+      planId:undefined,
+      starTime:'',
+      flyDuration:'',
+      landTime:'',
+      // 天气
+      weatherTxt:'',
+      // 视频是否是大屏
+      videoBigShow: true,
+      // 飞机状态
+      flyStatus:0,
+      // 历史任务
+      jobs: [],
+      job: {
+        loading: false,
+        order: 'descending'
+      },
+      pagination: {
+        size: 10,
+        current: 1
+      }
     }
   },
   components: {
-    [SdMap.name]: SdMap
+    [SdMap.name]: SdMap,
+    // 视频 cs 
+    [Custom.name]: Custom,
+    // [Control.name]: Control,
+    // [DroneMap.name]: DroneMap,
+    [Monitor.name]: Monitor,
+    [Settings.name]: Settings,
+    Operation,
+    [JobFile.name]: JobFile
   },
   computed: {
     swiper() {
+      console.log('这是swiper', this)
       return this.$refs.mySwiper.$swiper
     },
     ...mapState([
       'node',
-      'preference'
+      'preference',
+      'execute'
     ]),
     ...mapGetters([
       'depots',
@@ -381,7 +486,8 @@ export default {
         const { position, place } = d.msg;
         if (d.status.code !== 0 || position.length <= 0 || Object.keys(place).length <= 0) continue;
         const droneId = d.info.id;
-        const placeStyle = this.dronePlaceStyle[droneId];
+         console.log('placeStyle是什么-11', this.dronePlaceStyle[droneId])
+        // const placeStyle = this.dronePlaceStyle[droneId];
         const origin = position[0];
         for (const [placeName, pos] of Object.entries(place)) {
           const style = placeStyle[placeName] || {};
@@ -419,7 +525,8 @@ export default {
         const { position, place } = d.msg;
         if (d.status.code !== 0 || position.length <= 0 || Object.keys(place).length <= 0) continue;
         const droneId = d.info.id;
-        const placeStyle = this.dronePlaceStyle[droneId];
+        console.log('placeStyle是什么-22', this.dronePlaceStyle[droneId])
+        // const placeStyle = this.dronePlaceStyle[droneId];
         for (const [placeName, pos] of Object.entries(place)) {
           const style = placeStyle[placeName] || {};
           markers.push({
@@ -470,6 +577,54 @@ export default {
       if (time >= 3600) options.hour = 'numeric';
       return new Date(time * 1000).toLocaleString('en-US', options);
     },
+   
+    // 无人机id
+    droneId() {
+      let droneOlny = undefined
+      for (let d of this.drones) {
+        droneOlny = d.info.id
+      }
+      console.log('获取数据-无人机-msg', droneOlny)
+      return droneOlny;
+    },
+    // 当前nodeObj
+    nodeObj() {
+      const nodeId = this.droneId;
+      let node = this.node.find(node => node.info.id === nodeId);
+      return node
+    },
+    // 坐标
+    // position
+    lngLatObj() {
+      let lng = undefined
+      let lat = undefined
+      for (let d of this.drones) {
+        lng = d.msg.position[0].lng
+        lat = d.msg.position[0].lat
+      }
+      let lngLat = {
+        lng:lng,
+        lat:lat
+      }
+      console.log('获取数据-无人机-坐标', lngLat)
+      return lngLat;
+    },
+    // 视频 cs
+    points() {
+      let i = 0;
+      console.log('视频-csid', this.node)
+      const nodeId = this.droneId;
+      let node = this.node.find(node => node.info.id === nodeId);
+      console.log('视频-csid-end', this.nodeObj)
+      return this.nodeObj.info.points.map(point => {
+        const { id, point_type_name } = point;
+        const compo = CompoName[point_type_name] || '';
+        const key = `${nodeId}-${id}-${point_type_name}-${i++}`;
+        return { point, compo, key };
+      }).sort((a, b) => CompoOrder[a.compo] - CompoOrder[b.compo]);
+    },
+
+    // 底部
     // 无人机-电量占比
     droneRemain() { 
       let remainVal = undefined
@@ -494,7 +649,7 @@ export default {
       for (let d of this.drones) {
         speedVal = d.msg.drone_status.speed
       }
-      console.log('获取数据-无人机-msg', speedVal)
+      console.log('获取数据-无人机-飞行速度', speedVal)
       return speedVal;
     },
     // 无人机-信号
@@ -503,7 +658,7 @@ export default {
       for (let d of this.drones) {
         signalVal = d.msg.drone_status.signal
       }
-      console.log('获取数据-无人机-msg', signalVal)
+      console.log('获取数据-无人机-信号', signalVal)
       let signalNum = undefined
       // 五条信号显示个数
       // if(signalVal<=20){
@@ -537,28 +692,50 @@ export default {
       console.log('获取数据-无人机-电压', voltageVal)
       return voltageVal;
     },
-    // 无人机id
-    droneId() {
-      let droneOlny = undefined
-      for (let d of this.drones) {
-        droneOlny = d.info.id
+    //图片
+    ...mapState({ 
+        /**
+       * @param {SDWC.State} state
+       * @returns {SDWC.PlanRunningContent}
+       */
+      runningContent(state) {
+        /** @type {SDWC.PlanRunning} */
+        const running = state.plan.running.find(r => r.id === this.planId);
+        return running ? running.running : null;
       }
-      console.log('获取数据-无人机-msg', droneOlny)
-      return droneOlny;
-    },
+    })
     
   },
   created() {
     this.setPreference({ mapType });
-    
+
   },
   mounted() {
     this.swiper.slideTo(4, 1000, false)
+    
+    // 
+    this.planId = this.$route.query.planId
+    this.starTime = this.$route.query.timeObj.starTime
+    this.flyDuration = this.$route.query.timeObj.flyDuration
+    this.landTime = this.$route.query.timeObj.landTime
+    console.log('无人机的时间参数', this.timeObj) 
+    this.weatherTxt = this.$route.query.weather
+
+    console.log('无人机开始执行任务时间', this.execute)
+    
     // 订阅测试c'c'c'c 
-   this.submm()
+    //  this.submm()
+
+    this.processSatus()
+
+    if(this.planId){
+      // this.handleOpenFile()
+      this.getPlanJobs();
+    }
   },
   methods: {
     fullScreen(){},
+    
     onSwiper(swiper) {
       console.log(swiper);
     },
@@ -612,12 +789,113 @@ export default {
     ]),
 
     // 订阅测试
-    submm() {
-     let subval = MqttClient.mqtt.subscribe(`plans/${this.droneId}/status`);
-     console.log('订阅测试-返回值', subval)
-    }
-    
-   
+    // submm() {
+    //  let subval = MqttClient.mqtt.subscribe(`plans/${this.droneId}/status`);
+    //  console.log('订阅测试-返回值', subval)
+    // }
+    // 去除前面补零
+    removeZero(val){
+      let str = val.toString()
+      let fistChar = str.substr(0, 1)
+      let fistNum = Number(fistChar)
+      if(fistNum == 0){
+        return Number(str.substr(1, 2))
+      }else{
+        return Number(str)
+      }
+    },
+    // 时间转换成秒
+    changeSecond(val){
+      let onTime = this.parseTime(val,'{h}:{i}:{s}')
+      let onArr = onTime.toString().split(':');
+      let onSecond = this.removeZero(onArr[0])*3600 + this.removeZero(onArr[1])*60 + this.removeZero(onArr[2])
+      return onSecond
+    },
+    // 进度条状态
+    processSatus(){
+      // 当前状态
+      let onHms = this.changeSecond(new Date())
+      // 起飞 this.starTime 
+      let starHms = this.changeSecond(this.starTime)
+      // 返航 this.landTime 
+      let landHms = this.changeSecond(this.landTime)
+      // 降落 this.flyDuration
+      let durateHms = this.changeSecond(this.flyDuration)
+      if(onHms < starHms){
+        this.flyStatus = 1
+      } else if(starHms < onHms < landHms){
+        this.flyStatus = 2
+      } else if(landHms < onHms < durateHms){
+        this.flyStatus = 3
+      } else if(onHms > durateHms){
+        this.flyStatus = 4
+      } else{
+        this.flyStatus = 0
+      }
+       
+    },
+    // parseTime(currentDate,'{y}-{m}-{d} {h}:{i}:{s} 星期{a}')
+    // 返回停飞页面
+    goSuspend() {
+      this.processSatus()
+      // 飞行状态 flyStatus
+      this.$router.push({
+        path: "/suspend",
+        query: { planId: this.planId, flyStatus:this.flyStatus },
+      });
+      // this.$router.push({ name: "suspend" });
+    },
+    // 视频和地图切换
+    handleChage() {
+      this.videoBigShow = !this.videoBigShow
+    },
+    // 图片
+    // 判断是否降落
+    async getPlanJobs() {
+      this.job.loading = true;
+      console.log('这是什么拿---', this.plan)
+      const res = await getPlanJobs(this.planId);
+      if (this.isRunning) {
+        this.patchRunningJob(res, this.runningContent.job);
+      }
+      res.forEach(l => l.created_at = new Date(l.created_at));
+      this.jobs = res;
+      this.job.loading = false;
+      // if(this.jobs.files.name == "下载链接"){
+        // this.$refs.jobFile.open(this.jobs.files.blobId);
+        // 测试
+        let blobID = 913
+        // this.$refs.jobFile.open(blobID);
+      // }
+       
+    },
+    /**
+     * @param {SDWC.PlanJob[]} jobs
+     * @param {SDWC.PlanRunningContentJob} runningJob
+     */
+    patchRunningJob(jobs, runningJob) {
+      if (!runningJob || !runningJob.job_id) return;
+      /** @type {SDWC.PlanJob} */
+      const job = jobs.find(j => j.job_id === runningJob.job_id);
+      if (typeof job !== 'object') {
+        const now = new Date();
+        jobs.unshift(Object.assign({
+          temporary: true,
+          id: runningJob.job_id,
+          plan_id: this.planId,
+          created_at: now,
+          updated_at: now
+        }, runningJob));
+      } else {
+        if (job.temporary) {
+          job.files = runningJob.files;
+          job.extra = runningJob.extra;
+        } else {
+          job.files = Object.assign({}, job.files, runningJob.files);
+          job.extra = Object.assign({}, job.extra, runningJob.extra);
+        }
+      }
+    },
 
   }
   
@@ -632,12 +910,30 @@ export default {
   position: relative;
   overflow: hidden;
 }
+.uav-start-fly{
+  cursor: pointer;
+  position: fixed;
+  left: 220px;
+  top:28px;
+  margin:4px 0 0;
+  width:101px;
+  height:33px;
+  text-align: center;
+  background:url('assets/images/btn.png')no-repeat center center;
+  background-size: cover;
+  line-height:33px;
+  font-size: 14px;
+  color:#fff;
+  text-shadow: 0 0 14px #4AD4FF;
+  z-index: 12;
+}
 .video-wrap{
   width:100%;
   height:100%;
   position: absolute;
   left:0;
   top:0;
+  /* 原0 测试改为9 */
   z-index:0;
 }
 .head-bg{
@@ -786,6 +1082,61 @@ export default {
   flex-shrink: 0;
   width:24px;
 }
+.weather-icon-txt{
+   font-size:14px;
+  color:#fff;
+}
+/* small map */
+.small-map{
+  padding:8px;
+  width:401px;
+  height: 260px;
+  position: fixed;
+  bottom:260px;
+  left: 24px;
+  z-index: 2;
+  /* background: url('assets/images/bg.png')no-repeat center center rgba(255,255,255,0.1); */
+  background: url('assets/images/bg.png')no-repeat center center;
+  background-size: contain;
+}
+.map-coor{
+  cursor: pointer;
+  margin:0;
+  padding-left: 10px;
+  font-size: 14px;
+  color:#fff;
+  font-weight: bold;
+  line-height: 22px;
+}
+.amap{
+  width: 400px;
+  height: 238px;
+}
+.overview-small-map{
+  height:238px;
+  border-radius: 0 10px 0 10px;
+}
+.video-wrap .amap{
+  width: 100%;
+  height: 100%;
+}
+.video-wrap .overview-small-map{
+  height:100%;
+}
+.video-wrap .map__el{
+  height:100%;
+}
+.small-map .fly{
+  height: calc(100% - 22px)
+}
+
+#container .sd-card__head{
+  display:none;
+}
+#container .el-card__body{
+  height:100%;
+}
+/* 底部 */
 .botm-wrap{
   position: fixed;
   bottom: 0;
@@ -798,6 +1149,7 @@ export default {
 .botm-con{
   display: flex;
 }
+
 /* bot-lft */
 .btm-lft{
   width: 20%;
@@ -831,77 +1183,6 @@ export default {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.6);
   line-height: 22px;
-}
-/* btm-rgt */
-.btm-rgt{
-  float: right;
-  flex-shrink: 0;
-  width: 20%;
-}
-.center-control{
-  margin-top:100px;
-  padding:79px;
-  width: 57px;
-  height:57px;
-  position:relative;
-  float:left;
-}
-.control-ok{
-  width: 57px;
-  height:56px;
-  cursor: pointer;
-}
-.control-poit{
-  position: absolute;
-  width:79px;
-  height:79px;
-  z-index:2;
-  cursor: pointer;
-}
-.control-top{
-  left:50%;
-  top:20px;
-  margin-left:-39px;
-}
-.control-bottom{
-  left:50%;
-  bottom:20px;
-  margin-left:-39px;
-}
-.control-left{
-  left:20px;
-  top:50%;
-  margin-top:-39px;
-}
-.control-right{
-  right:20px;
-  top:50%;
-  margin-top:-39px;
-}
-.btm-btn{
-  margin-top:150px;
-  float: right;
-}
-.btm-btn-item{
-  cursor: pointer;
-  margin-top:8px;
-  width: 101px;
-  height: 33px;
-  text-align: center;
-  line-height: 33px;
-  background:url('assets/images/btn.png')no-repeat center center;
-  background-size: contain;
-  font-size: 14px;
-  color:#fff;
-  text-shadow: 0 0 14px #4AD4FF;
-  box-shadow: 0 0 26px rgba(43, 200, 253, 0.8)
-}
-.btm-btn-over{
-  background:url('assets/images/btn-1.png')no-repeat center center;
-  background-size: contain;
-  color:#fff;
-  text-shadow: 0 0 14px #fc3239;
-  box-shadow: 0 0 26px rgba(252, 50, 57, 0.8)
 }
 /* btm-center */
 .botm-cont{
@@ -980,10 +1261,15 @@ export default {
 }
 /* banner */
 .banner-wrap{
-  min-width: 1130px;
+  position:fixed;
+  left:21%;
+  right:21%;
+  bottom:0;
+  width: 1130px;
   height: 182px;
   margin: 10px auto 0;
   overflow: hidden;
+  z-index: 0;
 }
 /* .all-slide{
   display: flex;
@@ -1035,40 +1321,17 @@ export default {
   width: 100%;
   height: 100%;
 }
-/* small map */
-.small-map{
-  padding:8px;
-  width:401px;
-  height: 260px;
-  position: fixed;
-  bottom:260px;
-  left: 24px;
-  z-index: 2;
-  /* background: url('assets/images/bg.png')no-repeat center center rgba(255,255,255,0.1); */
-  background: url('assets/images/bg.png')no-repeat center center;
-  background-size: contain;
+/* btm-rgt */
+.btm-rgt{
+  float: right;
+  flex-shrink: 0;
+  width: 20%;
+  z-index: 3;
 }
-.map-coor{
-  margin:0;
-  padding-left: 20px;
-  font-size: 14px;
-  color:#fff;
-  font-weight: bold;
-  line-height: 22px;
-}
-.amap{
-  width: 400px;
-  height: 238px;
-}
-.overview-small-map{
-  height:238px;
-  border-radius: 0 10px 0 10px;
-}
-
 
 .clearfix:before, .clearfix:after {
-    content: "";
-    display: table;
+  content: "";
+  display: table;
 }
 .clearfix:after {
     clear: both;

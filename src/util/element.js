@@ -16,7 +16,7 @@ import {
   MenuItem,
   // MenuItemGroup,
   Input,
-  // InputNumber,
+  InputNumber,
   Radio,
   RadioGroup,
   RadioButton,
@@ -55,7 +55,7 @@ import {
   Badge,
   Card,
   // Rate,
-  Steps,
+  // Steps,
   // Step,
   // Carousel,
   // CarouselItem,
@@ -103,7 +103,7 @@ Vue.use(Submenu);
 Vue.use(MenuItem);
 // Vue.use(MenuItemGroup);
 Vue.use(Input);
-// Vue.use(InputNumber);
+Vue.use(InputNumber);
 Vue.use(Radio);
 Vue.use(RadioGroup);
 Vue.use(RadioButton);
@@ -142,7 +142,7 @@ Vue.use(Progress);
 Vue.use(Badge);
 Vue.use(Card);
 // Vue.use(Rate);
-Vue.use(Steps);
+// Vue.use(Steps);
 // Vue.use(Step);
 // Vue.use(Carousel);
 // Vue.use(CarouselItem);
@@ -167,7 +167,6 @@ Vue.use(Divider);
 // Vue.use(CascaderPanel);
 
 Vue.use(Loading.directive);
-
 
 // Vue.prototype.$loading = Loading.service;
 Vue.prototype.$msgbox = MessageBox;

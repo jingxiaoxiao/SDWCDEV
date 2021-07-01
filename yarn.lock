@@ -1425,13 +1425,6 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-axios@^0.21.1:
-  version "0.21.1"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.1.tgz#22563481962f4d6bde9a76d516ef0e5d3c09b2b8"
-  integrity sha512-dKQiRHxGD9PPRIUNIWvZhPTPpl1rf/OxTYKsqKUDjBwYylTvV7SjSHJb9ratfyzM6wCdLCOYLzs73qpg5c4iGA==
-  dependencies:
-    follow-redirects "^1.10.0"
-
 babel-helper-vue-jsx-merge-props@^2.0.0:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/babel-helper-vue-jsx-merge-props/-/babel-helper-vue-jsx-merge-props-2.0.3.tgz#22aebd3b33902328e513293a8e4992b384f9f1b6"
@@ -2947,7 +2940,7 @@ flv.js@^1.4.0:
     es6-promise "^4.2.5"
     webworkify "^1.5.0"
 
-follow-redirects@^1.0.0, follow-redirects@^1.10.0:
+follow-redirects@^1.0.0:
   version "1.14.1"
   resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.14.1.tgz#d9114ded0a1cfdd334e164e6662ad02bfd91ff43"
   integrity sha512-HWqDgT7ZEkqRzBvc2s64vSZ/hfOceEol3ac/7tKwzuvEyWx3/4UegXh5oBOIotkGsObyk3xznnSRVADBgWSQVg==
@@ -5824,9 +5817,9 @@ svgo@^2.3.0:
     stable "^0.1.8"
 
 swiper@^6.7.0:
-  version "6.7.0"
-  resolved "https://registry.yarnpkg.com/swiper/-/swiper-6.7.0.tgz#ec971e703d03ef6196354140fbb22b074642bf5c"
-  integrity sha512-zCfvWn7H7mCq7jgVurckhAwkjPUeMCkdC4rA7lagvaD3mIrNhKiaYYo2+nkxMVpiaWuCQ38e44Mya/dKb7HpyQ==
+  version "6.7.1"
+  resolved "https://registry.yarnpkg.com/swiper/-/swiper-6.7.1.tgz#bfea8b9262a9898740dc64390ca681b131223fb7"
+  integrity sha512-r5Xr0WdQ7CuQiomb/8A+j9QsIl2ClQk5KoJU1jWp8/OP4OS/0ZJf5tKLWlJMPRHafy1oRsmv1lSSyzJad6XoRg==
   dependencies:
     dom7 "^3.0.0"
     ssr-window "^3.0.0"

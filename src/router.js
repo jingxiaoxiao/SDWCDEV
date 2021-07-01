@@ -15,7 +15,6 @@ import Node from './pages/node/node.vue';
 import Flying from './pages/flying/flying.vue';
 import Suspend from './pages/suspend/suspend.vue';
 
-
 Vue.use(Router);
 
 function checkUser() {

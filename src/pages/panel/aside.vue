@@ -81,7 +81,6 @@
         >{{ item.info.name }}</el-menu-item>
       </template>
     </el-submenu>
-    
 
     <div class="aside__version">
       <span v-if="!collapse" class="aside__version-text">{{ version }}</span>
@@ -147,8 +146,6 @@ export default {
           return `plan-${id}`;
         case 'plan/new':
           return 'plan-new';
-        case 'sdwc': // 页面选中
-          return 'sdwc';
       }
       return '';
     },

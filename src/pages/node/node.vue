@@ -1,6 +1,5 @@
 <template>
   <div class="node" v-loading="!selectedNode">
-    <!-- 无人机、机场 页面 -->
     <component v-if="selectedNode" :is="componentName" :node="selectedNode"></component>
   </div>
 </template>

@@ -64,6 +64,7 @@ export default {
       this.downloadBlob(id).then(file => {
         this.file = file;
       });
+      console.log('这里的文件', this.file)
     },
     handleClosed() {
       this.file = {
