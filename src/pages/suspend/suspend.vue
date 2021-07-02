@@ -273,7 +273,7 @@
     </div>
     
     <!--  -->
-    <sd-plan-dialog ref="planDialog" :planId="flyPlan.id"  @changeForm="getForm"></sd-plan-dialog>
+    <sd-plan-dialog ref="planDialog" :planId="planId"  @changeForm="getForm"></sd-plan-dialog>
     
     <!--  -->
     <div class="dialog-black" v-show="dialogShow" @click="handleFlyBlock"></div>
@@ -509,7 +509,8 @@ export default {
       // 返航时间
       landTime:'',
       // 飞行状态
-      flyStatus:0
+      flyStatus:0,
+      planId:0
 
     }
   },
@@ -534,7 +535,7 @@ export default {
         let running = null
         this.plan.info.forEach(item => {
           if(state.plan.running.find(r => r.id === item.id)){
-            running = running.running
+            running = running[0].running
           }else{
             running = null
           }
@@ -708,19 +709,26 @@ export default {
       this.taskData = taskList
       this.inspectList[0].inspectVal = res.length
 
-      // 执行任务获取
-      this.gtOnTask(taskList)
-
-      // 无人机名称
-       this.taskData.forEach(item => {
-        let nodeDrone = this.node.find(node => node.info.id === item.node_id)
-        item.droneName = nodeDrone.info.name
-      })
-      
       // 任务执行历史id
       this.taskData.forEach(item => {
         this.getPlanJobs(item.id)
       })
+
+
+      // 执行任务获取
+      this.gtOnTask(taskList)
+
+      
+      // 无人机名称
+      this.taskData.forEach(item => {
+        let nodeDrone = this.node.find(node => node.info.id === item.node_id)
+        if(nodeDrone !== undefined){
+          item.droneName = nodeDrone.info.name
+        }
+      })
+      
+
+     
     },
     // 任务执行历史plans总和
     async getPlanJobs(planId) {
@@ -915,7 +923,8 @@ export default {
       
       // 要执行的任务==this.flyPlan
       this.flyPlan = this.onTask[0]
-      console.log('要执行的任务',this.flyPlan)
+      this.planId = this.flyPlan.id
+      console.log('要执行的任务MM',this.onTask)
       let endArr = (this.onTask[0].description).toString().split('.')
       let endSecond = this.removeZero(endArr[0])*3600 +  this.removeZero(endArr[1])*60
       
@@ -1012,8 +1021,8 @@ export default {
     },
     // 停飞
     handleStop() {
-      thi.allItem = []
-      thi.weatherItem = []
+      this.allItem = []
+      this.weatherItem = []
       this.flyItem = []
       this.$nextTick(() => this.$refs.planDialog.close());
       if (!this.isRunning) return;
@@ -1049,34 +1058,36 @@ export default {
       // 每步获取的信息
       console.log('ddsss', item)
       
-      // 自动执行下一步
-      if(item.dialog.buttons[1].message == "yes" || ((item.dialog.buttons[1].message == "confirm")&&(item.dialog.buttons[1].name == "下一步"))){
-        sef.$nextTick(() => this.$refs.planDialog.close());
-        MqttClient.mqtt.publish(`plans/${this.flyPlan.id}/term`, item.dialog.buttons[1].message);
-        
-        // 天气获取
-        if('items' in item.dialog){
-          if(item.dialog.items.length !== 0){
-            this.weatherItem = item.dialog.items;
+      if('dialog' in item){
+        // 自动执行下一步
+        if(item.dialog.buttons[1].message == "yes" || ((item.dialog.buttons[1].message == "confirm")&&(item.dialog.buttons[1].name == "下一步"))){
+          sef.$nextTick(() => this.$refs.planDialog.close());
+          MqttClient.mqtt.publish(`plans/${this.flyPlan.id}/term`, item.dialog.buttons[1].message);
+          
+          // 天气获取
+          if('items' in item.dialog){
+            if(item.dialog.items.length !== 0){
+              this.weatherItem = item.dialog.items;
+            }
+            console.log('所有天气item:', this.weatherItem)
           }
-          console.log('所有天气item:', this.weatherItem)
-        }
-      } 
+        } 
 
-      // 航点检测获取
-      if(item.dialog.buttons[1].name == "↑开始起飞↑"){
-        sef.$nextTick(() => this.$refs.planDialog.open());
-        // sef.$nextTick(() => this.$refs.planDialog.close());
-        // 
-        if('items' in item.dialog){
-          if(item.dialog.items.length !== 0){
-            this.flyItem = item.dialog.items;
+        // 航点检测获取
+        if(item.dialog.buttons[1].name == "↑开始起飞↑"){
+          sef.$nextTick(() => this.$refs.planDialog.open());
+          // sef.$nextTick(() => this.$refs.planDialog.close());
+          // 
+          if('items' in item.dialog){
+            if(item.dialog.items.length !== 0){
+              this.flyItem = item.dialog.items;
+            }
+            console.log('所有航点item:', this.flyItem)
           }
-          console.log('所有航点item:', this.flyItem)
+          // 获取起飞前对象为了获取按钮信息
+          this.lastFlyObj = item
+          console.log('起飞前的对象', this.lastFlyObj)
         }
-        // 获取起飞前对象为了获取按钮信息
-        this.lastFlyObj = item
-        console.log('起飞前的对象', this.lastFlyObj)
       }
 
       if(this.flyItem.length !== 0){

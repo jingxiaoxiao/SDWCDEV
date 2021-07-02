@@ -464,10 +464,10 @@ export default {
     ]),
     // 获取地图信息-测试
     mm(){
-      console.log('获取数据-depots', this.depots)
-      console.log('获取数据-drones', this.drones)
+      // console.log('获取数据-depots', this.depots)
+      // console.log('获取数据-drones', this.drones)
       
-      console.log('获取数据-node', this.drones)
+      // console.log('获取数据-node', this.drones)
       //  MqttClient.mqtt.publish(`plans/${this.planId}/term`);
       return this.depots
     },
@@ -476,7 +476,8 @@ export default {
       const style = {};
       for (const d of this.drones) {
         const mapPoint = d.info.points.find(p => p.point_type_name === 'map') || {};
-        style[d.info.id] = Object.assign({}, PlaceStyle, get(mapPoint, 'params.common.place', {}));
+        // style[d.info.id] = Object.assign({}, PlaceStyle, get(mapPoint, 'params.common.place', {}));
+        style[d.info.id] = Object.assign({}, get(mapPoint, 'params.common.place', {}));
       }
       return style;
     },
@@ -486,7 +487,7 @@ export default {
         const { position, place } = d.msg;
         if (d.status.code !== 0 || position.length <= 0 || Object.keys(place).length <= 0) continue;
         const droneId = d.info.id;
-         console.log('placeStyle是什么-11', this.dronePlaceStyle[droneId])
+        //  console.log('placeStyle是什么-11', this.dronePlaceStyle[droneId])
         // const placeStyle = this.dronePlaceStyle[droneId];
         const origin = position[0];
         for (const [placeName, pos] of Object.entries(place)) {
@@ -504,7 +505,7 @@ export default {
     },
     droneMarkers() {
       const markers = [];
-      console.log('获取数据-无人机-drones', this.drones)
+      // console.log('获取数据-无人机-drones', this.drones)
       for (let d of this.drones) {
         const position = d.msg.position[0];
         if (d.status.code === 0 && typeof position === 'object') {
@@ -525,7 +526,7 @@ export default {
         const { position, place } = d.msg;
         if (d.status.code !== 0 || position.length <= 0 || Object.keys(place).length <= 0) continue;
         const droneId = d.info.id;
-        console.log('placeStyle是什么-22', this.dronePlaceStyle[droneId])
+        // console.log('placeStyle是什么-22', this.dronePlaceStyle[droneId])
         // const placeStyle = this.dronePlaceStyle[droneId];
         for (const [placeName, pos] of Object.entries(place)) {
           const style = placeStyle[placeName] || {};
@@ -559,7 +560,7 @@ export default {
       return markers;
     },
     markers() {
-      console.log('获取数据-无人机-markers', ...this.depotMarkers)
+      // console.log('获取数据-无人机-markers', ...this.depotMarkers)
       return [...this.depotMarkers, ...this.droneMarkers, ...this.placeMarkers];
     },
     // 当前巡检 = 时长
@@ -584,7 +585,7 @@ export default {
       for (let d of this.drones) {
         droneOlny = d.info.id
       }
-      console.log('获取数据-无人机-msg', droneOlny)
+      // console.log('获取数据-无人机-msg', droneOlny)
       return droneOlny;
     },
     // 当前nodeObj
@@ -606,16 +607,16 @@ export default {
         lng:lng,
         lat:lat
       }
-      console.log('获取数据-无人机-坐标', lngLat)
+      // console.log('获取数据-无人机-坐标', lngLat)
       return lngLat;
     },
     // 视频 cs
     points() {
       let i = 0;
-      console.log('视频-csid', this.node)
+      // console.log('视频-csid', this.node)
       const nodeId = this.droneId;
       let node = this.node.find(node => node.info.id === nodeId);
-      console.log('视频-csid-end', this.nodeObj)
+      // console.log('视频-csid-end', this.nodeObj)
       return this.nodeObj.info.points.map(point => {
         const { id, point_type_name } = point;
         const compo = CompoName[point_type_name] || '';
@@ -631,7 +632,7 @@ export default {
       for (let d of this.drones) {
         remainVal = d.msg.battery.remain
       }
-      console.log('获取数据-无人机-电量占比', remainVal)
+      // console.log('获取数据-无人机-电量占比', remainVal)
       return remainVal;
     },
     // 无人机-高度
@@ -640,7 +641,7 @@ export default {
       for (let d of this.drones) {
         heightVal = d.msg.drone_status.height
       }
-      console.log('获取数据-无人机-高度', heightVal)
+      // console.log('获取数据-无人机-高度', heightVal)
       return heightVal;
     },
     // 无人机-飞行速度
@@ -649,7 +650,7 @@ export default {
       for (let d of this.drones) {
         speedVal = d.msg.drone_status.speed
       }
-      console.log('获取数据-无人机-飞行速度', speedVal)
+      // console.log('获取数据-无人机-飞行速度', speedVal)
       return speedVal;
     },
     // 无人机-信号
@@ -658,7 +659,7 @@ export default {
       for (let d of this.drones) {
         signalVal = d.msg.drone_status.signal
       }
-      console.log('获取数据-无人机-信号', signalVal)
+      // console.log('获取数据-无人机-信号', signalVal)
       let signalNum = undefined
       // 五条信号显示个数
       // if(signalVal<=20){
@@ -689,7 +690,7 @@ export default {
       for (let d of this.drones) {
         voltageVal = d.msg.drone_status.battery.voltage
       }
-      console.log('获取数据-无人机-电压', voltageVal)
+      // console.log('获取数据-无人机-电压', voltageVal)
       return voltageVal;
     },
     //图片
@@ -718,10 +719,10 @@ export default {
     this.starTime = this.$route.query.timeObj.starTime
     this.flyDuration = this.$route.query.timeObj.flyDuration
     this.landTime = this.$route.query.timeObj.landTime
-    console.log('无人机的时间参数', this.timeObj) 
+    // console.log('无人机的时间参数', this.timeObj) 
     this.weatherTxt = this.$route.query.weather
 
-    console.log('无人机开始执行任务时间', this.execute)
+    // console.log('无人机开始执行任务时间', this.execute)
     
     // 订阅测试c'c'c'c 
     //  this.submm()
@@ -737,10 +738,10 @@ export default {
     fullScreen(){},
     
     onSwiper(swiper) {
-      console.log(swiper);
+      // console.log(swiper);
     },
     onSlideChange() {
-      console.log('slide change');
+      // console.log('slide change');
     },
     // 获取当前时间
     parseTime(time, pattern) {
@@ -853,7 +854,7 @@ export default {
     // 判断是否降落
     async getPlanJobs() {
       this.job.loading = true;
-      console.log('这是什么拿---', this.plan)
+      // console.log('这是什么拿---', this.plan)
       const res = await getPlanJobs(this.planId);
       if (this.isRunning) {
         this.patchRunningJob(res, this.runningContent.job);

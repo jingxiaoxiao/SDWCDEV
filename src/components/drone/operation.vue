@@ -15,7 +15,7 @@
         v-if="point.params && point.params.control && point.params.control.gimbal"
         class="monitor-drone-control--horizontal"
       >
-        <!-- pitch angle right -->
+        <!-- pitch angle right x轴-->
         <el-slider
           v-model="gimbal.yaw"
           :min="point.params.control.gimbal.yaw[0]"
@@ -23,7 +23,7 @@
           @change="handleGimbalCtl({ yaw: $event })"
           style="width:180px"
         />
-        <!-- button 'center' -->
+        <!-- button 'center' 重置 -->
         <el-tooltip class="monitor-drone-control__restore" placement="top">
           <span slot="content" v-t="'monitor.gimbal.reset'"></span>
           <el-button circle size="mini" icon="el-icon-refresh" @click="handleGimbalRestore"></el-button>
@@ -33,7 +33,7 @@
         v-if="point.params && point.params.control && point.params.control.gimbal"
         class="monitor-drone-control--vertical"
       >
-        <!-- pitch angle left -->
+        <!-- pitch angle left y轴 -->
         <el-slider
           vertical
           v-model="gimbal.pitch"
@@ -43,13 +43,10 @@
           height="135px"
         />
       </div>
-      <div
-        v-if="point.params && point.params.control && point.params.control.zoom"
-        class="monitor-drone-control--bottom"
-      >
+      <div v-if="point.params && point.params.control && point.params.control.zoom" class="monitor-drone-control--bottom">
       
         <!-- zoom slider bottom -->
-        <el-slider
+        <!-- <el-slider
           vertical
           v-model="gimbal.zoom"
           :min="point.params.control.zoom.zoom[0]"
@@ -57,24 +54,24 @@
           :step="0.1"
           @change="handleGimbalZoom"
           height="100px"
-        />
+        /> -->
         <!-- zoom reset -->
-        <el-tooltip class="monitor-drone-control__restore" placement="bottom">
+        <!-- <el-tooltip class="monitor-drone-control__restore" placement="bottom">
           <span slot="content" v-t="'monitor.zoom.reset'"></span>
-          <el-button circle size="mini" icon="el-icon-refresh" @click="handleZoomRestore"></el-button>
-        </el-tooltip>
+          <el-button circle size="mini" icon="el-icon-refresh" @click="handleZoomRestore"> ddd</el-button>
+        </el-tooltip> -->
       </div>
     </div>
 
     <!-- -->
     <template  v-if="streamAvailable">
-              <!-- 云台自己 -->
+      <!-- 云台自己 -->
       <div class="center-control">
-        <img class="control-poit control-top"  @click="handleGimUp" src="/assets/images/Polygon1.png" alt="">
-        <img class="control-poit control-bottom" @click="handleGimDown" src="/assets/images/Polygon2.png" alt="">
-        <img class="control-poit control-left" @click="handleGimLft" src="/assets/images/Polygon3.png" alt="">
-        <img class="control-poit control-right" @click="handleGimRig" src="/assets/images/Polygon4.png" alt="">
-        <img class="control-ok"  @click="handleZoomRestore" src="/assets/images/Polygon-ok.png" alt="">
+        <img class="control-poit control-top"  @click="handleGimUp(2)" src="/assets/images/Polygon1.png" alt="">
+        <img class="control-poit control-bottom" @click="handleGimDown(1)" src="/assets/images/Polygon2.png" alt="">
+        <img class="control-poit control-left" @click="handleGimLft(3)" src="/assets/images/Polygon3.png" alt="">
+        <img class="control-poit control-right" @click="handleGimRig(4)" src="/assets/images/Polygon4.png" alt="">
+        <img class="control-ok"  @click="handleGimbalRestore" src="/assets/images/Polygon-ok.png" alt="">
       </div>
       <!-- 虚拟摇杆 -->
       <!-- <div class="center-control">
@@ -166,6 +163,8 @@ export default {
       // 
       remoteShow:true,
       streamAvailable: true,
+      // 当前点击的按钮
+      currentBtn:0
      
     };
   },
@@ -266,7 +265,7 @@ export default {
      */
     handleControlType(type) {
      alert(type) 
-    //  alert(event)
+     //  alert(event)
       if (event.target.tagName === 'INPUT') return;
       // this.toggleJoystick();
       this.control.enabled = 'stick';
@@ -307,6 +306,7 @@ export default {
      * @param {number} zoom
      */
     handleGimbalZoom(zoom) {
+      alert('重置2')
       this.$mqtt(this.point.node_id, {
         mission: 'camera',
         arg: { action: 'zoom', zoom }
@@ -324,6 +324,7 @@ export default {
       });
     },
     handleGimbalRestore() {
+      alert('重置-真正')
       this.handleGimbalCtl({ yaw: 0, pitch: 0 });
       this.gimbal.yaw = 0;
       this.gimbal.pitch = 0;
@@ -338,6 +339,7 @@ export default {
         this.gimbal.yaw = gimbalMax
         this.rigBan = true
       }
+      this.handleGimbalCtl({ yaw: this.gimbal.yaw })
     },
     // 自定义云台-左
     handleGimLft() {
@@ -349,6 +351,9 @@ export default {
         this.gimbal.yaw = gimbalMin
         this.lftBan = true
       }
+      
+      // this.gimbal.yaw, this.gimbal.pitch
+      this.handleGimbalCtl({ yaw: this.gimbal.yaw })
     },
     // 自定义云台-上
     handleGimUp() {
@@ -360,7 +365,9 @@ export default {
         this.gimbal.pitch = gimbalMax
         this.upBan = true
       }
-      alert('上控制:'+this.gimbal)
+      // this.gimbal.yaw, this.gimbal.pitch
+      this.handleGimbalCtl({ pitch: this.gimbal.pitch })
+      // alert('上控制:'+this.gimbal)
     },
     // 自定义云台-下
     handleGimDown() {
@@ -372,29 +379,30 @@ export default {
         this.gimbal.pitch = gimbalMin
         this.downBan = true
       }
+      this.handleGimbalCtl({ pitch: this.gimbal.pitch })
     },
     // 
     handleZoomRestore() {
-      alert('重置')
+      alert('重置1')
       this.handleGimbalZoom(1);
       this.gimbal.zoom = 0;
     },
     handleGestureStart(x, y) {
-      console.log('这是什么111')
+      console.log('按下鼠标左键')
       if (this.gimbalDisabled) return;
       this.gesture.valid = true;
       this.gesture.lastPos = { x, y };
       this.gesture.lastTime = Date.now();
     },
     handleGestureMove(x, y) {
-      console.log('这是什么222')
+      // console.log('手势移动')
       if (this.gimbalDisabled) return;
       if (!this.gesture.valid) return;
       this.sendGestureCtl(x, y);
       this.gesture.lastPos = { x, y };
     },
     handleGestureEnd(x, y) {
-      console.log('这是什么333')
+      console.log('释放鼠标左键')
       if (this.gimbalDisabled) return;
       if (!this.gesture.valid) return;
       if (this.gesture.lastPos.x !== x || this.gesture.lastPos.y !== y) {
@@ -447,7 +455,9 @@ export default {
     },
     bindGestures() {
       /** @type {HTMLDivElement} */
-      const el = this.$el.getElementsByClassName('monitor-drone-control')[0];
+      // monitor-drone-control
+      // center-control
+      const el = this.$el.getElementsByClassName('center-control')[0];
       if (!el) {
         setTimeout(() => this.bindGestures(), 150);
         return;
@@ -456,40 +466,100 @@ export default {
       el.addEventListener('mousedown', ev => {
         if (ev.target !== el && event.target.parentElement !== el) return;
         this.handleGestureStart(ev.x, ev.y);
+        console.log('监听事件-mousedown-x',ev.x)
+        console.log('监听事件-mousedown-y',ev.y)
+        if(ev.target.className.indexOf("control-bottom") != -1){
+          this.currentBtn = 1 // y减10
+        }else if(ev.target.className.indexOf("control-top") != -1){
+          this.currentBtn = 2 // y加10
+        }else if(ev.target.className.indexOf("control-left") != -1){
+          this.currentBtn = 3 // x减10
+        }else if(ev.target.className.indexOf("control-right") != -1){
+          this.currentBtn = 4 // x加10
+        }else if(ev.target.className.indexOf("control-ok") != -1){
+          this.currentBtn = 5
+        }
+        this.handleGestureStart(this.gimbal.yaw, this.gimbal.pitch);
       });
-      el.addEventListener('touchstart', ev => {
-        if (ev.target !== el && event.target.parentElement !== el) return;
-        // do not prevent scroll when control disabled
-        if (this.gimbalDisabled) return;
-        ev.preventDefault();
-        const t = ev.touches[0] || ev.targetTouches[0] || ev.changedTouches[0];
-        if (!t) return;
-        this.handleGestureStart(t.pageX, t.pageY);
-      });
+      // el.addEventListener('touchstart', ev => {
+      //   if (ev.target !== el && event.target.parentElement !== el) return;
+      //   // do not prevent scroll when control disabled
+      //   if (this.gimbalDisabled) return;
+      //   ev.preventDefault();
+      //   const t = ev.touches[0] || ev.targetTouches[0] || ev.changedTouches[0];
+      //   if (!t) return;
+      //   this.handleGestureStart(t.pageX, t.pageY);
+      // });
       // Gesture Move
       el.addEventListener('mousemove', ev => {
-        this.handleGestureMoveThrottled(ev.x, ev.y);
+        // console.log('监听事件-mousemove-x',ev.x)
+        // console.log('监听事件-mousemove-y',ev.y)
+        // this.handleGestureMoveThrottled(ev.x, ev.y);
+        // this.gimbal.yaw, this.gimbal.pitch
+        switch ( this.currentBtn )
+        {
+          case '1':
+            this.gimbal.pitch -= 10;
+            break;
+          case '2':
+            this.gimbal.pitch += 10;
+            break;
+          case '3':
+            this.gimbal.yaw -= 10;
+            break;
+          case '4':
+            this.gimbal.yaw += 10;
+            break;
+          default:
+            break;
+        }
+        this.handleGestureMoveThrottled(this.gimbal.yaw, this.gimbal.pitch);
       });
-      el.addEventListener('touchmove', ev => {
-        if (ev.target !== el && event.target.parentElement !== el) return;
-        const t = ev.touches[0] || ev.targetTouches[0] || ev.changedTouches[0];
-        if (!t) return;
-        this.handleGestureMoveThrottled(t.pageX, t.pageY);
-      });
+      // el.addEventListener('touchmove', ev => {
+      //   if (ev.target !== el && event.target.parentElement !== el) return;
+      //   const t = ev.touches[0] || ev.targetTouches[0] || ev.changedTouches[0];
+      //   if (!t) return;
+      //   this.handleGestureMoveThrottled(t.pageX, t.pageY);
+      // });
       // Gesture End
       el.addEventListener('mouseup', ev => {
-        this.handleGestureEnd(ev.x, ev.y);
+        console.log('监听事件-mouseup-x',ev.x)
+        console.log('监听事件-mouseup-y',ev.y)
+        // this.handleGestureEnd(ev.x, ev.y);
+        // this.gimbal.yaw, this.gimbal.pitch
+        switch ( this.currentBtn )
+        {
+          case '1':
+            this.gimbal.pitch -= 10;
+            break;
+          case '2':
+            this.gimbal.pitch += 10;
+            break;
+          case '3':
+            this.gimbal.yaw -= 10;
+            break;
+          case '4':
+            this.gimbal.yaw += 10;
+            break;
+          case '5':
+            // this.gimbal.yaw = this.gimbal.yaw
+            // this.gimbal.pitch = this.gimbal.pitch
+            break;
+          default:
+            break;
+        }
+        this.handleGestureEnd(this.gimbal.yaw, this.gimbal.pitch);
       });
-      el.addEventListener('touchend', ev => {
-        if (ev.target !== el && event.target.parentElement !== el) return;
-        const t = ev.touches[0] || ev.targetTouches[0] || ev.changedTouches[0];
-        if (!t) return;
-        this.handleGestureEnd(t.pageX, t.pageY);
-      });
+      // el.addEventListener('touchend', ev => {
+      //   if (ev.target !== el && event.target.parentElement !== el) return;
+      //   const t = ev.touches[0] || ev.targetTouches[0] || ev.changedTouches[0];
+      //   if (!t) return;
+      //   this.handleGestureEnd(t.pageX, t.pageY);
+      // });
       // Gesture Cancel
-      el.addEventListener('mouseleave', ev => {
-        this.handleGestureEnd(ev.x, ev.y);
-      });
+      // el.addEventListener('mouseleave', ev => {
+      //   this.handleGestureEnd(ev.x, ev.y);
+      // });
       // Double Click
       el.addEventListener('dblclick', ev => {
         const rect = el.getBoundingClientRect();
