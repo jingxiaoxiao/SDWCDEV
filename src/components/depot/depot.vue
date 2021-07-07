@@ -52,6 +52,7 @@ export default {
   },
   computed: {
     points() {
+      console.log('位置-node', this.node)
       let i = 0;
       const nodeId = this.node.info.id;
       return this.node.info.points.map(point => {

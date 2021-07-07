@@ -535,7 +535,8 @@ export default {
         let running = null
         this.plan.info.forEach(item => {
           if(state.plan.running.find(r => r.id === item.id)){
-            running = running[0].running
+            running = state.plan.running[0].running
+            console.log('MMMM-plan-running', running)
           }else{
             running = null
           }
@@ -886,8 +887,10 @@ export default {
       })
 
       console.log('要执行的任务-index',index)
+      console.log('要执行的任务-index22',dataList)
       dataList.forEach((itmm, indd) => {
         // 是否有正在执行的项目
+        console.log('this.hasRunning-MMM',this.hasRunning)
         if(!this.hasRunning){
           if(indd > index){
             itmm.flyProcess = 0
@@ -1111,9 +1114,11 @@ export default {
       MqttClient.mqtt.publish(`plans/${this.flyPlan.id}/term`, message);
     },
     handleFlySure(){
+      // 开始飞行
       // let message = this.lastFlyObj.dialog.buttons[1].message
       // MqttClient.mqtt.publish(`plans/${this.flyPlan.id}/term`, message);
 
+      // 取消任务(避免真的飞行)
       let message = this.lastFlyObj.dialog.buttons[0].message
       MqttClient.mqtt.publish(`plans/${this.flyPlan.id}/term`, message);
     
@@ -1122,10 +1127,10 @@ export default {
         if(this.landTime != '' || this.landTime != null){
           let timeObj = {
             starTime:this.startTime,
-            flyDuration:this.endDate, 
+            flyDuration:this.endDate,
             landTime:this.landTime
           }
-           this.$router.push({
+          this.$router.push({
             path: "/flying",
             query: { planId: this.flyPlan.id, timeObj:timeObj, weather:this.weather.text },
           });
@@ -1137,6 +1142,10 @@ export default {
     // 测试页面跳转
     // TODO delete
     ces(){
+      // 点击立即起飞  获取下达任务-日期
+      let execteTime = this.parseTime((new Date()),'{y}-{m}-{d}') + ' ' + this.parseTime(this.currentDate,'{h}:{i}:{s}')
+      this.$store.commit(EXE.SET_EXECUTE, execteTime)
+
       // this.$router.push({ name: 'flying' });
       this.startTime = this.parseTime((new Date()),'{y}-{m}-{d} {h}:{i}:{s}')
 
@@ -1147,7 +1156,7 @@ export default {
             flyDuration:this.endDate, 
             landTime:this.landTime
           }
-           this.$router.push({
+          this.$router.push({
             path: "/flying",
             query: { planId: this.flyPlan.id, timeObj:timeObj, weather:this.weather.text },
           });

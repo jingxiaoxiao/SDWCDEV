@@ -63,6 +63,12 @@
       </div>
     </div>
 
+    <!-- 拍照 -->
+    <div class="btm-btn">
+      <div class="btm-btn-item btm-btn-over"  v-if="availableActions.length==0">无视频</div>
+      <div class="btm-btn-item"  v-for="a of availableActions" :key="a.method" @click="handleAction(a.method)">{{a.label || a.method}}</div>    
+    </div>
+
     <!-- -->
     <template  v-if="streamAvailable">
       <!-- 云台自己 -->
@@ -80,11 +86,7 @@
           <div class="monitor-drone-joystick__zone"></div>
         </div>
       </div> -->
-      <!-- 拍照 -->
-      <div class="btm-btn">
-        <div class="btm-btn-item btm-btn-over"  v-if="availableActions.length==0">无视频</div>
-        <div class="btm-btn-item"  v-for="a of availableActions" :key="a.method" @click="handleAction(a.method)">{{a.label || a.method}}</div>    
-      </div>
+     
     </template>
   
     

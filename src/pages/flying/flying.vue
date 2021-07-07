@@ -220,7 +220,8 @@
             <div class="process-txt clearfix">
               <div class="process-txt-li">
                 <p :class="flyStatus===1?'status curr':'status'">下达任务</p>
-                <p class="time">{{parseTime((new Date()),'{y}-{m}-{d}')}} {{execute.executeTime}}</p>
+                <!-- {{parseTime((new Date()),'{y}-{m}-{d}')}} -->
+                <p class="time"> {{execute.executeTime}}</p>
               </div>
               <div class="process-txt-li">
                   <p :class="flyStatus===2?'status curr':'status'">起飞</p>

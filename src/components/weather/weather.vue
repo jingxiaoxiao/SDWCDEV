@@ -81,6 +81,7 @@ export default {
   },
   methods: {
     getWeather() {
+      console.log('位置是', this.status.status)
       const { lng, lat } = this.status.status;
       return Promise.all([
         minutely(lng, lat).then(data => this.minutely = data.minutely || []),
