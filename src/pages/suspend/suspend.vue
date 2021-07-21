@@ -7,6 +7,7 @@
       </div>
       <p class="head-title">无人机智能操控平台</p>
     </div>
+
      <!-- 左侧巡检 -->
     <div class="inspect-lft">
       <div class="inspect-cont">
@@ -27,6 +28,8 @@
     <!-- content -->
     <div class="suspend-body">
       <div class="suspend-left">
+        <div>
+          
         <div class="suspend-item suspend-item2">
           <p class="item-title">距离下次巡检</p>
           <!-- v-if="isRunning" -->
@@ -36,7 +39,8 @@
           <p class="uav-start"  @click="ces" >测试跳转页面</p>
        
           <p class="item-time">
-            {{hour}}:{{min}}:{{second}}
+            <!-- {{hour}}:{{min}}:{{second}} -->
+            {{countSecond}}
           </p>
           <div class="item-lists clearfix">
             <div class="item-list" v-for="(list, index) in inspectList" :key="index">
@@ -127,6 +131,8 @@
             </el-pagination> -->
           </div>
         </div>
+        
+        </div>
       </div>
       <div class="suspend-right">
         <div class="suspend-right-con">
@@ -163,7 +169,7 @@
                   <span class="suspend-btm-tit">机场监控设备</span>
                 </div>
                 <div class="suspend-btm-small-video">
-                  <video-player class="video-player vjs-custom-skin"
+                  <!-- <video-player class="video-player vjs-custom-skin"
                   ref="videoPlayer"
                   :playsinline="true"
                   style="object-fit:fill"
@@ -172,7 +178,17 @@
                   @pause="onPlayerPause($event)"
                   @play="onPlayerPlay($event)"
                   @fullscreenchange="onFullscreenChange($event)"
-                  @click="fullScreen" />
+                  @click="fullScreen" /> -->
+                  <template v-for="{ point, compo, key } of points">
+                    <component
+                      :is="compo"
+                      :key="key"
+                      :info="nodeObj.info"
+                      :point="point"
+                      :status="nodeObj.status"
+                      :msg="nodeObj.msg"
+                    ></component>
+                  </template>
                 </div>
               </div>
               <div class="suspend-bottom-mid">
@@ -254,7 +270,7 @@
                   <span class="suspend-btm-tit">机场监控设备</span>
                 </div>
                 <div class="suspend-btm-small-video">
-                  <video-player class="video-player vjs-custom-skin"
+                  <!-- <video-player class="video-player vjs-custom-skin"
                   ref="videoPlayer"
                   :playsinline="true"
                   style="object-fit:fill"
@@ -263,7 +279,17 @@
                   @pause="onPlayerPause($event)"
                   @play="onPlayerPlay($event)"
                   @fullscreenchange="onFullscreenChange($event)"
-                  @click="fullScreen" />
+                  @click="fullScreen" /> -->
+                  <template v-for="{ point, compo, key } of points">
+                    <component
+                      :is="compo"
+                      :key="key"
+                      :info="nodeObj.info"
+                      :point="point"
+                      :status="nodeObj.status"
+                      :msg="nodeObj.msg"
+                    ></component>
+                  </template>
                 </div>
               </div>
             </div>
@@ -344,7 +370,24 @@ import { PlanDialogLevelClass } from '@/constants/plan-dialog-level-class';
 
 import MqttClient from '@/api/mqtt';
 
+import Monitor from '@/components/monitor/video.vue';
+
 let dateTime = new Date();
+
+const CompoName = {
+  'iframe': Monitor.name,
+  'livestream_img': Monitor.name,
+  'livestream_flv': Monitor.name,
+  'livestream_hls': Monitor.name,
+  'livestream_webrtc': Monitor.name,
+  'livestream_webrtc2': Monitor.name,
+  'livestream_webrtc3': Monitor.name,
+  'livestream_webrtc4': Monitor.name
+};
+const CompoOrder = {
+  [Monitor.name]: 2
+};
+
 export default {
   data() {
     return {
@@ -410,6 +453,7 @@ export default {
       hour:'',
       min:'',
       second:'',
+      countSecond:'',
       endDate:'', //结束日期
       // 巡检统计
       inspectList:[
@@ -504,10 +548,14 @@ export default {
       dialogShow: false,
       loadingData: true,
       lastFlyObj:{},
+      // 预计飞行时长
+      planFlyDuration:'',
       // 起飞时间
       startTime:'',
       // 返航时间
       landTime:'',
+      // 回巢时间
+      flyDuration:'',
       // 飞行状态
       flyStatus:0,
       planId:0
@@ -516,7 +564,8 @@ export default {
   },
   components: {
     [SdMap.name]: SdMap,
-    [PlanDialog.name]: PlanDialog
+    [PlanDialog.name]: PlanDialog,
+    [Monitor.name]: Monitor
   },
   computed: {
      ...mapState({
@@ -531,12 +580,10 @@ export default {
       },
       // 
       isHasRunning(state) {
-        console.log('MMMM-plan', this.plan)
         let running = null
         this.plan.info.forEach(item => {
           if(state.plan.running.find(r => r.id === item.id)){
             running = state.plan.running[0].running
-            console.log('MMMM-plan-running', running)
           }else{
             running = null
           }
@@ -579,7 +626,6 @@ export default {
       for (let d of this.drones) {
         droneOlny = d.info.id
       }
-      console.log('获取数据-无人机-id', droneOlny)
       return droneOlny;
     },
     // 机场id
@@ -589,6 +635,12 @@ export default {
         depotsOlny = d.info.id
       }
       return depotsOlny;
+    },
+    // 当前nodeObj
+    nodeObj() {
+      const nodeId = this.depotsId;
+      let node = this.node.find(node => node.info.id === nodeId);
+      return node
     },
     // 无人机信息
     selectedNodeDrons() {
@@ -628,19 +680,57 @@ export default {
     //
     hasRunning() {
        return this.isHasRunning !== null;
-    }
+    },
+    // 视频
+    points() {
+      let i = 0;
+      const nodeId = this.depotsId;
+      let node = this.node.find(node => node.info.id === nodeId);
+      return this.nodeObj.info.points.map(point => {
+        const { id, point_type_name } = point;
+        const compo = CompoName[point_type_name] || '';
+        const key = `${nodeId}-${id}-${point_type_name}-${i++}`;
+        return { point, compo, key };
+      }).sort((a, b) => CompoOrder[a.compo] - CompoOrder[b.compo]);
+    },
 
   },
-  watch: {},
+  watch: {
+    countSecond: {
+      handler(newValue,oldValue) {
+        // 监听倒计时
+        let djs = newValue.split(':')
+        console.log('监听倒计时数组,',djs);
+        if(djs[0] == '00'){
+          if(djs[1]=='00'){
+            if(djs[2]=='00'){
+            this.handleExecute(1)
+            // this.ces()
+           }
+          }
+        }
+        
+        //newValue 改变后的数据
+        //oldValue  改变前的数据
+      }
+      //,deep: true
+    }
+  },
   created() {
     this.setPreference({ mapType });
   },
   mounted () {
     this.flyStatus = this.$route.query.flyStatus
     // this.countTime()
+
+   
+
+
+
     this.getIndexPlan()
     // 
     this.getEquipList()
+    this.getWeather()
     
   },
   methods: {
@@ -697,8 +787,9 @@ export default {
     
     // 任务列表
     async getIndexPlan(){
+      // 获取任务列
       const res = await indexPlan();
-      console.log('获取任务列', res)
+      console.log('暂停页面-获取任务列', res)
       let taskList = res
       taskList.forEach(item => {
         if(typeof Number(item.description) === 'number'  && !isNaN(Number(item.description))){
@@ -795,7 +886,8 @@ export default {
       }
       
       this.equipLIstanbul[1].statusList[2].statusName ='信号' + this.selectedNodeDepot.msg.drone_status.signal ;
-      this.equipLIstanbul[1].statusList[3].statusName ='卫星'  + this.selectedNodeDepot.msg.drone_status.gps.satcount + '星' + this.selectedNodeDepot.msg.drone_status.gps.type ;
+      // this.equipLIstanbul[1].statusList[3].statusName ='卫星'  + this.selectedNodeDepot.msg.drone_status.gps.satcount + '星' + this.selectedNodeDepot.msg.drone_status.gps.type ;
+      this.equipLIstanbul[1].statusList[3].statusName ='卫星'  + this.selectedNodeDepot.msg.drone_status.gps.satcount + '星';
        
       //  
     },
@@ -823,18 +915,29 @@ export default {
               theTime1 = parseInt(theTime1%60);
           }
         }
+        
         // +"秒"
         // var result = ""+parseInt(theTime);
         if(parseInt(theTime)<10){
           var result = ""+"0"+parseInt(theTime);
+        } else{
+           var result = ""+parseInt(theTime);
         }
         if(theTime1 > 0) {
           // 分
+          if(parseInt(theTime1)<10){
+            result = ""+"0"+parseInt(theTime1)+":"+result;
+          } else{
             result = ""+parseInt(theTime1)+":"+result;
+          }
         }
         if(theTime2 > 0) {
           // 小时
+          if(parseInt(theTime2)<10){
+            result = ""+"0"+parseInt(theTime2)+":"+result;
+          } else{
             result = ""+parseInt(theTime2)+":"+result;
+          }
         }
         return result;
     },
@@ -862,10 +965,11 @@ export default {
       var execteArr = execteTime.toString().split(':');
       let currentSecond = this.removeZero(execteArr[0])*3600 + this.removeZero(execteArr[1])*60 + this.removeZero(execteArr[2])
 
-      let index = undefined
+      let index = 0
       // 将要执行的任务
       dataList.forEach((item, ind)=> {
         item.flyProcess = 100
+        // 描述中的飞行时间
         if(item.description !== 0){
           // 执行到几点=>秒
           let doArr = (item.description).toString().split('.')
@@ -877,7 +981,6 @@ export default {
           // 获取要执行的任务
           if((doSecond > currentSecond) && (this.onTask.length == 0)) {
             index = ind
-            
             this.onTask.push(item)
             return false;
           }
@@ -886,16 +989,13 @@ export default {
         
       })
 
-      console.log('要执行的任务-index',index)
-      console.log('要执行的任务-index22',dataList)
       dataList.forEach((itmm, indd) => {
         // 是否有正在执行的项目
-        console.log('this.hasRunning-MMM',this.hasRunning)
+        // console.log('是否有正在执行的项目',this.hasRunning)
         if(!this.hasRunning){
           if(indd > index){
             itmm.flyProcess = 0
           }else if(indd == index){
-            console.log('当前进度-index',this.flyStatus)
             switch(this.flyStatus) {
               case '1':
                 itmm.flyProcess = 25
@@ -927,7 +1027,6 @@ export default {
       // 要执行的任务==this.flyPlan
       this.flyPlan = this.onTask[0]
       this.planId = this.flyPlan.id
-      console.log('要执行的任务MM',this.onTask)
       let endArr = (this.onTask[0].description).toString().split('.')
       let endSecond = this.removeZero(endArr[0])*3600 +  this.removeZero(endArr[1])*60
       
@@ -966,13 +1065,14 @@ export default {
         // 秒
         let s = Math.floor((leftTime / 1000) % 60);
         this.second = s < 10 ? "0" + s : s;
-
-        //console.log(this.day + "天" + this.hour + "时" + this.min + "分" + this.second);
+        this.countSecond = this.hour+':'+this.min+':'+this.second 
       } else {
         this.day = 0;
         this.hour = "00";
         this.min = "00";
         this.second = "00";
+        this.countSecond = this.hour+':'+this.min+':'+this.second 
+        
       }
       // 等于0的时候不调用
       if (
@@ -995,7 +1095,7 @@ export default {
     // 获取开始执行任务时间
     handleExecute(status) {
       // 点击立即起飞  获取下达任务-日期
-      let execteTime = this.parseTime(this.currentDate,'{h}:{i}:{s}')
+      let execteTime = this.parseTime((new Date()),'{y}-{m}-{d}') + ' ' + this.parseTime(this.currentDate,'{h}:{i}:{s}')
       this.$store.commit(EXE.SET_EXECUTE, execteTime)
 
       if(status == 1){
@@ -1010,7 +1110,6 @@ export default {
     handleRun() {
       // this.$nextTick(() => this.$refs.planDialog.open());
       this.$nextTick(() => this.$refs.planDialog.close());
-      // console.log('起飞-执飞任务', this.flyPlan)
       runPlanJob(this.flyPlan.id).catch(() => { /* noop */ });
       // 检测弹框
       if(this.isRunning){
@@ -1059,7 +1158,7 @@ export default {
       let sef = this
       sef.$nextTick(() => this.$refs.planDialog.close());
       // 每步获取的信息
-      console.log('ddsss', item)
+      console.log('暂停页面-每步获取的信息', item)
       
       if('dialog' in item){
         // 自动执行下一步
@@ -1072,7 +1171,7 @@ export default {
             if(item.dialog.items.length !== 0){
               this.weatherItem = item.dialog.items;
             }
-            console.log('所有天气item:', this.weatherItem)
+            console.log('暂停页面-所有天气item:', this.weatherItem)
           }
         } 
 
@@ -1084,12 +1183,17 @@ export default {
           if('items' in item.dialog){
             if(item.dialog.items.length !== 0){
               this.flyItem = item.dialog.items;
+              this.flyItem.forEach(itf => {
+                itf.name
+                if(itf.name == "预计时间"){
+                  this.planFlyDuration = itf.message
+                }
+              })
             }
-            console.log('所有航点item:', this.flyItem)
           }
           // 获取起飞前对象为了获取按钮信息
           this.lastFlyObj = item
-          console.log('起飞前的对象', this.lastFlyObj)
+          console.log('暂停页面-起飞前的对象', this.lastFlyObj)
         }
       }
 
@@ -1114,25 +1218,53 @@ export default {
       MqttClient.mqtt.publish(`plans/${this.flyPlan.id}/term`, message);
     },
     handleFlySure(){
+      this.startTime = this.parseTime((new Date()),'{y}-{m}-{d} {h}:{i}:{s}')
+
       // 开始飞行
-      // let message = this.lastFlyObj.dialog.buttons[1].message
-      // MqttClient.mqtt.publish(`plans/${this.flyPlan.id}/term`, message);
+      let message = this.lastFlyObj.dialog.buttons[1].message
+      MqttClient.mqtt.publish(`plans/${this.flyPlan.id}/term`, message);
 
       // 取消任务(避免真的飞行)
-      let message = this.lastFlyObj.dialog.buttons[0].message
-      MqttClient.mqtt.publish(`plans/${this.flyPlan.id}/term`, message);
+      // let message = this.lastFlyObj.dialog.buttons[0].message
+      // MqttClient.mqtt.publish(`plans/${this.flyPlan.id}/term`, message);
+
+      // 2021-07-18新增---start   planFlyDuration
+      // 获取当前起飞时间（时分秒）转换成秒
+      let sStart = this.parseTime((new Date()),'{h}:{i}:{s}')
+      let sStartArr = sStart.toString().split(':')
+      let sStartSecond = this.removeZero(sStartArr[0])*3600 +  this.removeZero(sStartArr[1])*60 +this.removeZero(sStartArr[2]) 
+      // this.planFlyDuration = '4.12min'
+      if(this.planFlyDuration != undefined){
+         // 获取预计时间的数字
+        let planNumber = this.planFlyDuration.toString().split("m")[0] 
+        // 转换成整数秒
+        let planNumbM = parseInt(planNumber*60)
+        // 回巢时间（单位秒）
+        let allPlanSecond = sStartSecond + planNumbM
+        // 回巢时间（单位：年月日时分秒）
+        this.flyDuration = this.parseTime((new Date()),'{y}-{m}-{d}') + ' ' + this.formatSeconds(allPlanSecond)
+
+        // 返航时间
+        let hmsSecond = allPlanSecond -(2*60)
+        this.landTime = this.parseTime((new Date()),'{y}-{m}-{d}') + ' ' + this.formatSeconds(hmsSecond)
+      }
+     // 2021-07-18新增---end   planFlyDuration
+
     
-      this.startTime = this.parseTime((new Date()),'{y}-{m}-{d} {h}:{i}:{s}')
       if(this.endDate != '' || this.endDate != null){
         if(this.landTime != '' || this.landTime != null){
-          let timeObj = {
-            starTime:this.startTime,
-            flyDuration:this.endDate,
-            landTime:this.landTime
-          }
+          // let timeObj = {
+          //   starTime:this.startTime,
+          //   flyDuration:this.endDate,
+          //   landTime:this.landTime
+          // }
+          // this.$router.push({
+          //   path: "/flying",
+          //   query: { planId: this.flyPlan.id, timeObj:timeObj, weather:this.weather.text },
+          // });
           this.$router.push({
             path: "/flying",
-            query: { planId: this.flyPlan.id, timeObj:timeObj, weather:this.weather.text },
+            query: { planId: this.flyPlan.id, starTime:this.startTime, landTime:this.landTime, flyDuration:this.flyDuration },
           });
         }
       }
@@ -1144,21 +1276,36 @@ export default {
     ces(){
       // 点击立即起飞  获取下达任务-日期
       let execteTime = this.parseTime((new Date()),'{y}-{m}-{d}') + ' ' + this.parseTime(this.currentDate,'{h}:{i}:{s}')
+      // 下达任务时间 execteTime
       this.$store.commit(EXE.SET_EXECUTE, execteTime)
 
       // this.$router.push({ name: 'flying' });
       this.startTime = this.parseTime((new Date()),'{y}-{m}-{d} {h}:{i}:{s}')
 
+      
+
       if(this.endDate != '' || this.endDate != null){
         if(this.landTime != '' || this.landTime != null){
-          let timeObj = {
-            starTime:this.startTime,
-            flyDuration:this.endDate, 
-            landTime:this.landTime
-          }
+          // let timeObj = {
+          //   starTime:this.startTime,
+          //   flyDuration:this.endDate, 
+          //   landTime:this.landTime
+          // }
+          // let timeObj = {
+          //   starTime:"2021-05-16 08:55:25",
+          //   flyDuration:"2021-05-16 08:56:25", 
+          //   landTime:"2021-05-16 08:57:25"
+          // }
+          // this.$http.jsonp("https://api.douban.com//v2/movie/top250")
+          //   .then(function (reponse) {
+          // })
+          // res.writeHead(200,{'content-Type':'text/plain',"Access-Control-Allow-Origin":"*"});
+          // this.$router.push({ name: 'flying',  params: { planId: this.flyPlan.id, starTime:this.startTime, flyDuration:this.endDate, landTime:this.landTime } });
+         
+
           this.$router.push({
             path: "/flying",
-            query: { planId: this.flyPlan.id, timeObj:timeObj, weather:this.weather.text },
+            query: { planId: this.flyPlan.id, starTime:this.startTime, landTime:this.landTime, flyDuration:this.endDate },
           });
         }
        
@@ -1175,7 +1322,7 @@ export default {
 <style>
 .overview-map {
   margin: 0;
-  height: 1016px;
+  height: 996px;
 }
 .overview-map .el-card__body {
   height: 100%;
@@ -1188,11 +1335,10 @@ export default {
 
 .suspend-page{
   width:1920px;
-  /* height:100vh; */
   background: url('assets/images/s-bg.png')no-repeat center center;
   background-size: cover;
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 .head-bg{
   position: fixed;
@@ -1266,10 +1412,20 @@ export default {
 /* content */
 .suspend-body{
   position: relative;
-  margin-top:86px;
+  /* margin-top:86px; */
+  padding-top:86px;
   display:flex;
   z-index:4;
+  height: calc(100vh - 86px);
+  overflow-y: auto;
 }
+/* 样式 */
+.suspend-body::-webkit-scrollbar {width: 12px;}
+.suspend-body::-webkit-scrollbar-track {-webkit-box-shadow: inset 0 0 6px rgba(246,246,246,0.3);border-radius: 10px;}
+.suspend-body::-webkit-scrollbar-thumb {border-radius: 10px;background: rgba(0,0,0,0.1);-webkit-box-shadow: inset 0 0 6px rgba(246,246,246,0.5);}
+.suspend-body::-webkit-scrollbar-thumb:window-inactive {    background: rgba(160,160,160,0.4);}
+
+
 .suspend-left{
   width:656px;
   margin-left: 20px;
@@ -1420,7 +1576,7 @@ export default {
 .el-table td, .el-table th.is-leaf{
   border:0;
 }
-.el-table .cell{
+.task-table .el-table .cell{
   color:#fff;
 }
 .el-table th>.cell{
@@ -1434,7 +1590,7 @@ export default {
    background: rgba(90,146,255,0.2);
 }
 
-/* 设置滚动条的样式 */
+/* 样式 */
 .task-table .el-table--scrollable-y .el-table__body-wrapper::-webkit-scrollbar {width: 12px;}
 .task-table .el-table--scrollable-y .el-table__body-wrapper::-webkit-scrollbar-track {-webkit-box-shadow: inset 0 0 6px rgba(246,246,246,0.3);border-radius: 10px;}
 .task-table .el-table--scrollable-y .el-table__body-wrapper::-webkit-scrollbar-thumb {border-radius: 10px;background: rgba(0,0,0,0.1);-webkit-box-shadow: inset 0 0 6px rgba(246,246,246,0.5);}
@@ -1463,6 +1619,7 @@ export default {
 .suspend-right{
   flex-grow: 1;
   width:1210px;
+  height:1016px;
   margin-left: 20px;
   background: url('assets/images/s-r-bg.png')no-repeat center top;
   background-size:100% 100%;
@@ -1470,7 +1627,8 @@ export default {
 .suspend-right-con{
   position: relative;
   padding:10px;
-  height:calc(100% - 20px)
+  /* height:calc(100% - 20px) */
+  /* height:1016px; */
 }
 .suspend-map{
   width:100%;
@@ -1479,8 +1637,8 @@ export default {
 .suspend-bottom{
   position: absolute;
   left:0;
-  bottom:0;
-  margin: 0 25px 10px;
+  bottom:4px;
+  margin: 0 18px 10px;
   width:1172px;
   height:246px;
   background:url('assets/images/sr-bg.png')no-repeat center top;

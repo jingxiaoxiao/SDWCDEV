@@ -14,16 +14,23 @@
     @cancel-point="handlePopoverCancel"
   >
     <template #action>
+      ddd-kkkss
+      <!-- <h1>polylines:{{polylines}}</h1>
+      <h1>markers:{{markers}}</h1>
+      <h1>heatmap:{{msg}}</h1>
+      <h1>follow:{{follow}}</h1>
+      <h1>selectable:{{selectable}}</h1>
+      <h1>popover-shown:{{popover}}</h1> -->
       <el-button
         :icon="`el-icon-location${follow ? '' : '-outline'}`"
         :type="follow ? 'primary' : 'default'"
         size="small"
         @click="handleFollow"
       >
-        <span v-t="'map.follow'"></span>
+        <span v-t="'map.follow'"></span>ddd-kk
       </el-button>
       <el-button icon="el-icon-delete" size="small" @click="handlePathClear">
-        <span v-t="'map.clear'"></span>
+        <span v-t="'map.clear'"></span>dd
       </el-button>
       <el-popover ref="popover" trigger="manual" popper-class="map__popover" v-model="popover.show">
         <div
@@ -182,6 +189,8 @@ export default {
           }
         }
       }
+      console.log('polylines-原始',polylines);
+      
       return polylines;
     },
     droneMarkers() {
@@ -197,6 +206,7 @@ export default {
           heading: position.heading
         });
       }
+      console.log('droneMarkers-原始',markers);
       return markers;
     },
     depotMarkers() {
@@ -212,11 +222,14 @@ export default {
           });
         }
       }
+      console.log('depotMarkers-原始',markers);
       return markers;
     },
     placeMarkers() {
       const { place } = this.msg;
       const markers = [];
+      console.log('这个object是什么',Object.entries(place));
+      
       for (const [name, pos] of Object.entries(place)) {
           const style = this.placeStyle[name] || {};
           markers.push({
@@ -227,9 +240,12 @@ export default {
             position: pos
           });
       }
+      console.log('placeMarkers-原始',markers);
       return markers;
     },
     markers() {
+      console.log('waypoints-原始',this.waypoints.map(w => w.markers).flat());
+      
       return [
         ...this.waypoints.map(w => w.markers).flat(),
         ...this.droneMarkers,

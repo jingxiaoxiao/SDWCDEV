@@ -23,6 +23,7 @@ export default {
         }
       }
       result.sort((a, b) => b.time - a.time);
+      console.log('消息状态：', result)
       return result.slice(0, 15);
     }
   },

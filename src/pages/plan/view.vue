@@ -22,7 +22,6 @@
           <span v-t="'plan.view.run'"></span>
         </el-button>
       </template>
-      
       <sd-plan-readonly :plan="planToShow"></sd-plan-readonly>
     </sd-card>
     <sd-map icon="map-waypoint" title="map.waypoint" fit v-bind="map"></sd-map>

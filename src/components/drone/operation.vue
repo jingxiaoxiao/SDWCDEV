@@ -795,33 +795,7 @@ export default {
   right: 4px;
   overflow: hidden;
 }
-/* 拍照 */
-.btm-btn{
-  margin-top:150px;
-  float: right;
-  margin-right:20px;
-}
-.btm-btn-item{
-  cursor: pointer;
-  margin-top:8px;
-  width: 101px;
-  height: 33px;
-  text-align: center;
-  line-height: 33px;
-  background:url('assets/images/btn.png')no-repeat center center;
-  background-size: contain;
-  font-size: 14px;
-  color:#fff;
-  text-shadow: 0 0 14px #4AD4FF;
-  box-shadow: 0 0 26px rgba(43, 200, 253, 0.8)
-}
-.btm-btn-over{
-  background:url('assets/images/btn-1.png')no-repeat center center;
-  background-size: contain;
-  color:#fff;
-  text-shadow: 0 0 14px #fc3239;
-  box-shadow: 0 0 26px rgba(252, 50, 57, 0.8)
-}
+
 /* 底部 */
 
 /* btm-rgt */
@@ -866,9 +840,11 @@ export default {
   top:50%;
   margin-top:-30px;
 }
+/* 拍照 */
 .btm-btn{
-  margin-top:150px;
+  margin-top:120px;
   float: right;
+  margin-right:20px;
 }
 .btm-btn-item{
   cursor: pointer;

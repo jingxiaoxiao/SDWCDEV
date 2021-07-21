@@ -105,6 +105,9 @@ export function downloadBlob(id) {
   return downloadFile(`/api/v2/blobs/${id}`);
 }
 
+export function picBlob(id) {
+  return downloadFile(`/api/v1/blobs/${id}`);
+}
 /**
  * @param {{ [key: string]: File }} files
  * @returns {Promise<{ [key: string]: string }>}

@@ -43,6 +43,7 @@
             title="map.satellite"
             :polylines="polylines"
             :markers="markers"
+            v-bind="map"
           ></sd-map>
         </div> 
       </template>
@@ -54,13 +55,25 @@
       <template v-if="videoBigShow">
         <p class="map-coor"  @click="handleChage">坐标：{{lngLatObj.lng}},{{lngLatObj.lat}}</p>
         <div id="container" ref="basicMapbox" class="amap">
-          <sd-map
-            icon="map-marker"
+          <!-- DroneMap -->
+          <!-- <sd-map v-bind="map"></sd-map> -->
+            <sd-map
             class="overview-small-map"
+            icon="map-marker"
             title="map.satellite"
             :polylines="polylines"
             :markers="markers"
-          ></sd-map>
+            :heatmap="drones[0].msg.heatmap"
+            :follow="follow"
+            selectable
+            :popover-shown="popover.show"
+          >
+           <template #action>
+              <el-button icon="el-icon-delete" size="small" @click="handlePathClear">
+                <span v-t="'map.clear'"></span>ddsd
+              </el-button>
+           </template>
+          </sd-map>
         </div> 
       </template>
       <template v-else>
@@ -83,6 +96,23 @@
       </template>
       
     </div>
+  
+    <!-- 机巢视频 -->
+    <!-- <div class="small-map small-map-rgt"> -->
+      <!-- <p class="map-coor">机场监控设备</p> -->
+      <!-- <div class="small-map-rgt-div"> -->
+        <!-- <template v-for="{ point, compo, key } of pointsDepot">
+                    <component
+                      :is="compo"
+                      :key="key"
+                      :info="selectedNodeDepot.info"
+                      :point="point"
+                      :status="selectedNodeDepot.status"
+                      :msg="selectedNodeDepot.msg"
+                    ></component>
+                  </template> -->
+      <!-- </div>
+    </div> -->
 
     <!-- 头部 -->
     <div class="head-wrap">
@@ -97,6 +127,8 @@
       <div class="inspect-cont">
         <img class="inspect-icon" src="/assets/images/icon_time_full.png">
         <span>当前巡检：</span><em>{{duration}}</em>
+        <h4 style="color:red">无人机模式：{{droneStatus}}</h4>
+        <h4 style="color:red">无人机模式-返航时间：{{actualLand}}</h4>
       </div>
     </div>
 
@@ -105,7 +137,7 @@
       <div class="time-cont">
         <span class="time-date">{{ parseTime(currentDate,'{y}-{m}-{d} {h}:{i}:{s} 星期{a}') }}</span>
         <!-- <img class="weather-icon" src="/assets/images/icon_sun.png"> -->
-         <span class="weather-icon-txt">{{weatherTxt}}</span>
+         <span class="weather-icon-txt">{{weather.text}}</span>
         
       </div>
     </div>
@@ -143,7 +175,7 @@
         <div class="btm-lft">
           <div class="data clearfix">
             <div class="data-li">
-              <span class="data-label">速度：</span>
+              <span class="data-label">水平速度：</span>
               <p class="data-value"><em class="data-val">{{droneSpeed}}</em><i class="data-unit">m/s</i></p>
             </div>
             <div class="data-li">
@@ -164,7 +196,11 @@
             </div>
             <div class="data-li">
               <span class="data-label">GPS</span>
-              <p class="data-value"><em class="data-val"> {{gpsObj.satcount}}</em><i class="data-unit">星{{gpsObj.type}}</i></p>
+              <p class="data-value">
+                <em class="data-val"> {{gpsObj.satcount}}</em>
+                <i class="data-unit">星</i>
+                <!-- <i class="data-unit">星{{gpsObj.type}}</i> -->
+                </p>
             </div>
             
           </div>
@@ -219,20 +255,20 @@
             </div>
             <div class="process-txt clearfix">
               <div class="process-txt-li">
-                <p :class="flyStatus===1?'status curr':'status'">下达任务</p>
+                <p :class="flyStatus === 1 ? 'status curr' : 'status'">下达任务</p>
                 <!-- {{parseTime((new Date()),'{y}-{m}-{d}')}} -->
                 <p class="time"> {{execute.executeTime}}</p>
               </div>
               <div class="process-txt-li">
-                  <p :class="flyStatus===2?'status curr':'status'">起飞</p>
+                  <p :class="flyStatus === 2 ? 'status curr' : 'status'">起飞</p>
                   <p class="time">{{starTime}}</p>
               </div>
               <div class="process-txt-li">
-                  <p :class="flyStatus===3?'status curr':'status'">返航</p>
+                  <p :class="flyStatus === 3 ? 'status curr' : 'status'">返航</p>
                   <p class="time">{{landTime}}</p>
               </div>
               <div class="process-txt-li">
-                  <p :class="flyStatus===4?'status curr':'status'">降落</p>
+                  <p :class="flyStatus === 4 ? 'status curr' : 'status'">降落</p>
                   <p class="time">{{flyDuration}}</p>
               </div>
             </div>
@@ -251,7 +287,7 @@
                   <!-- slides -->
                   <swiper-slide v-for="item in bannerList" :key="item.id">
                     <div class="img-pic">
-                      <img :src="item.imgUrl" alt="">
+                      <!-- <img :src="item.imgUrl" alt=""> -->
                     </div>
                     <p class="swiper-txt">{{item.time}}</p>
                   </swiper-slide>             
@@ -304,15 +340,23 @@ let dateTime = new Date();
 // 视频 cs
 // import Control from '@/components/drone/control.vue';
 // import Monitor from '@/components/drone/video.vue';
-// import DroneMap from '@/components/drone/map.vue';
+import DroneMap from '@/components/drone/map.vue';
+import get from 'lodash/get';
+import { PlaceStyle } from '@/constants/drone-place-style';
 import Custom from '@/components/custom/custom.vue';
 import Settings from '@/components/settings/settings.vue';
 
 import Monitor from '@/components/drone/video2.vue';
 import Operation from '@/components/drone/operation.vue';
 
-import { getPlanJobs } from '@/api/super-dock';
+import { getPlanJobs, picBlob } from '@/api/super-dock';
 import JobFile from '@/components/job-file/job-file.vue';
+
+import { weather, warning } from '@/api/heweather';
+
+import { waypointsToMapProps } from '@/pages/plan/common';
+import { parseWaypoints } from '@/util/waypoint-parser';
+
 
 const CompoName = {
   // 'map': DroneMap.name,
@@ -341,6 +385,7 @@ const CompoOrder = {
 export default {
   data() {
     return {
+      map: {},
       playerOptions: {
           playbackRates: [0.5, 1.0, 1.5, 2.0],  //播放速度
           autoplay: false, //如果true,浏览器准备好时开始回放。
@@ -417,9 +462,12 @@ export default {
       mapType: 'sd-map-mapbox',
       // 停飞页面传来值
       planId:undefined,
-      starTime:'',
-      flyDuration:'',
-      landTime:'',
+      starTime:'2021-05-25 15:45:22',
+      flyDuration:'2021-05-25 15:55:22',
+      landTime:'2021-05-25 16:45:22',
+       // actual实际时间
+      actualLand:'',//实际返航时间
+      actualDuration:'',//实际降落时间
       // 天气
       weatherTxt:'',
       // 视频是否是大屏
@@ -435,6 +483,24 @@ export default {
       pagination: {
         size: 10,
         current: 1
+      },
+       // 天气
+      weather: {},
+      // 
+      follow: false,
+      popover: {
+        show: false,
+        coordinate: null
+      },
+      // 2021-07-20
+      waypoints: [],
+    }
+  },
+  watch: {
+    ['msgD.msg.waypoint']:{
+      immediate: true,
+      handler() {
+        this.updateCurrentWaypoints();
       }
     }
   },
@@ -447,7 +513,9 @@ export default {
     [Monitor.name]: Monitor,
     [Settings.name]: Settings,
     Operation,
-    [JobFile.name]: JobFile
+    [JobFile.name]: JobFile,
+    // DroneMap
+    [DroneMap.name]: DroneMap
   },
   computed: {
     swiper() {
@@ -463,51 +531,104 @@ export default {
       'depots',
       'drones'
     ]),
-    // 获取地图信息-测试
-    mm(){
-      // console.log('获取数据-depots', this.depots)
-      // console.log('获取数据-drones', this.drones)
-      
-      // console.log('获取数据-node', this.drones)
-      //  MqttClient.mqtt.publish(`plans/${this.planId}/term`);
-      return this.depots
-    },
     // 无人机点线
-    dronePlaceStyle() {
-      const style = {};
+    // dronePlaceStyle() {
+    //   let style = {};
+    //   for (const d of this.drones) {
+    //     const mapPoint = d.info.points.find(p => p.point_type_name === 'map') || {};
+    //     style[d.info.id] = Object.assign({}, PlaceStyle, get(mapPoint, 'params.common.place', {}));
+    //   }
+    //   return style;
+    // },
+    // placeStyle() {
+    //   if (!this.point.params) return PlaceStyle;
+    //   return Object.assign({}, PlaceStyle, get(this.point, 'params.common.place', {}));
+    // },
+    // drones[0]
+    msgD(){
       for (const d of this.drones) {
-        const mapPoint = d.info.points.find(p => p.point_type_name === 'map') || {};
-        // style[d.info.id] = Object.assign({}, PlaceStyle, get(mapPoint, 'params.common.place', {}));
-        style[d.info.id] = Object.assign({}, get(mapPoint, 'params.common.place', {}));
+        return d
       }
-      return style;
+    },
+    // 2021-07-20无人机点线
+    placeStyle() {
+       for (const d of this.drones) {
+         d.info.points.map(point => {
+           if (!point.params) return PlaceStyle;
+           let placeStyle = Object.assign({}, PlaceStyle, get(point, 'params.common.place', {}))
+            console.log('placeStyle-2',placeStyle);
+           return placeStyle;
+         })
+       }
     },
     polylines() {
+      let placeStyle;
+      for (const d of this.drones) {
+         d.info.points.map(point => {
+           if (!point.params) return PlaceStyle;
+           placeStyle = Object.assign({}, PlaceStyle, get(point, 'params.common.place', {}))
+            console.log('placeStyle-polylines-2',placeStyle);
+          //  return placeStyle;
+         })
+       }
+      console.log('地图路线-polylines-1ddd',placeStyle);
+      let that = this
       const polylines = [];
       for (const d of this.drones) {
         const { position, place } = d.msg;
-        if (d.status.code !== 0 || position.length <= 0 || Object.keys(place).length <= 0) continue;
-        const droneId = d.info.id;
-        //  console.log('placeStyle是什么-11', this.dronePlaceStyle[droneId])
-        // const placeStyle = this.dronePlaceStyle[droneId];
-        const origin = position[0];
-        for (const [placeName, pos] of Object.entries(place)) {
-          const style = placeStyle[placeName] || {};
-          if (style.stroke) {
-            polylines.push({
-              name: `${droneId}_${placeName}`,
-              style,
-              coordinates: [origin, pos]
-            });
+        for (const wp of this.waypoints) {
+          polylines.push({
+            name: `waypoint${polylines.length}`,
+            style: { stroke: 'solid', color: '#ea4335' },
+            coordinates: wp.coordinates
+          });
+        }
+        if (position.length > 0) {
+          polylines.push({
+            name: 'path',
+            style: { stroke: 'solid', color: '#909399' },
+            coordinates: position
+          });
+          const origin = position[0];
+
+          for (const [name, pos] of Object.entries(place)) {
+            let namee = name.toString()
+            const style = placeStyle[namee] || {};
+            if (style.stroke) {
+              polylines.push({
+                name: name,
+                style: style,
+                coordinates: [origin, pos]
+              });
+            }
           }
         }
+        // if (d.status.code !== 0 || position.length <= 0 || Object.keys(place).length <= 0) continue;
+        // const droneId = d.info.id;
+        // const placeStyle = this.placeStyle[droneId];
+        // const origin = position[0];
+        // for (const [placeName, pos] of Object.entries(place)) {
+        //   const style = placeStyle[placeName] || {};
+        //   if (style.stroke) {
+        //     polylines.push({
+        //       name: `${droneId}_${placeName}`,
+        //       style,
+        //       coordinates: [origin, pos]
+        //     });
+        //   }
+        // }
       }
+      // polylines = this.map.polylines[0]
+      console.log('地图路线d',polylines);
+      
       return polylines;
     },
     droneMarkers() {
       const markers = [];
-      // console.log('获取数据-无人机-drones', this.drones)
+      
       for (let d of this.drones) {
+        
+      console.log('无人机信息1', d);
         const position = d.msg.position[0];
         if (d.status.code === 0 && typeof position === 'object') {
           markers.push({
@@ -521,48 +642,78 @@ export default {
       }
       return markers;
     },
-    placeMarkers() {
-      const markers = [];
-      for (const d of this.drones) {
-        const { position, place } = d.msg;
-        if (d.status.code !== 0 || position.length <= 0 || Object.keys(place).length <= 0) continue;
-        const droneId = d.info.id;
-        // console.log('placeStyle是什么-22', this.dronePlaceStyle[droneId])
-        // const placeStyle = this.dronePlaceStyle[droneId];
-        for (const [placeName, pos] of Object.entries(place)) {
-          const style = placeStyle[placeName] || {};
-          markers.push({
-            type: 'place',
-            id: `${droneId}_${placeName}`,
-            name: placeName,
-            style: style,
-            position: pos
-          });
-        }
-      }
-      return markers;
-    },
     depotMarkers() {
       const markers = [];
       for (const d of this.depots) {
         const { code, status } = d.status;
-        if (code === 0) {
+        if (code === 0 && status.link_id === this.drones[0].info.id) {
           markers.push({
             type: 'depot',
             id: d.info.id,
             name: d.info.name,
             position: {
-              lng: +status.lng,
-              lat: +status.lat,
+              lng: status.lng,
+              lat: status.lat,
             }
           });
         }
       }
       return markers;
     },
+    placeMarkers() {
+      let placeStyle;
+      for (const d of this.drones) {
+         d.info.points.map(point => {
+           if (!point.params) return PlaceStyle;
+           placeStyle = Object.assign({}, PlaceStyle, get(point, 'params.common.place', {}))
+            console.log('placeStyle-placeMarkers-2',placeStyle);
+          //  return placeStyle;
+         })
+       }
+      console.log('地图路线-placeMarkers-1ddd',placeStyle);
+
+      const { place } = this.drones[0].msg;
+      const markers = [];
+
+      for (const [name, pos] of Object.entries(place)) {
+          const style = placeStyle[name] || {};
+          markers.push({
+            type: 'place',
+            id: name,
+            name: name,
+            style: style,
+            position: pos
+          });
+      }
+      // for (const d of this.drones) {
+      //   const { position, place } = d.msg;
+      //   if (d.status.code !== 0 || position.length <= 0 || Object.keys(place).length <= 0) continue;
+        
+      //   const droneId = d.info.id;
+      //   const placeStyle = this.placeStyle[droneId];
+      //   for (const [placeName, pos] of Object.entries(place)) {
+      //     const style = placeStyle[placeName] || {};
+      //     markers.push({
+      //       type: 'place',
+      //       id: `${droneId}_${placeName}`,
+      //       name: placeName,
+      //       style: style,
+      //       position: pos
+      //     });
+      //   }
+      // }
+      return markers;
+    },
     markers() {
+      console.log('waypoints-原始',this.waypoints.map(w => w.markers).flat());
       // console.log('获取数据-无人机-markers', ...this.depotMarkers)
-      return [...this.depotMarkers, ...this.droneMarkers, ...this.placeMarkers];
+      // return [...this.depotMarkers, ...this.droneMarkers, ...this.placeMarkers];
+       return [
+        ...this.waypoints.map(w => w.markers).flat(),
+        ...this.droneMarkers,
+        ...this.depotMarkers,
+        ...this.placeMarkers
+      ];
     },
     // 当前巡检 = 时长
     duration() {
@@ -586,7 +737,6 @@ export default {
       for (let d of this.drones) {
         droneOlny = d.info.id
       }
-      // console.log('获取数据-无人机-msg', droneOlny)
       return droneOlny;
     },
     // 当前nodeObj
@@ -608,16 +758,13 @@ export default {
         lng:lng,
         lat:lat
       }
-      // console.log('获取数据-无人机-坐标', lngLat)
       return lngLat;
     },
-    // 视频 cs
+    // 无人机-视频 cs
     points() {
       let i = 0;
-      // console.log('视频-csid', this.node)
       const nodeId = this.droneId;
       let node = this.node.find(node => node.info.id === nodeId);
-      // console.log('视频-csid-end', this.nodeObj)
       return this.nodeObj.info.points.map(point => {
         const { id, point_type_name } = point;
         const compo = CompoName[point_type_name] || '';
@@ -626,6 +773,22 @@ export default {
       }).sort((a, b) => CompoOrder[a.compo] - CompoOrder[b.compo]);
     },
 
+    // 机场监控设备-视频
+    // pointsDepot() {
+    //   let i = 0;
+    //   const nodeId = this.depotsId;
+    //   console.log('机场监控设备-视频-depotid', this.depotsId)
+    //    console.log('机场监控设备-视频-depotid2', nodeId)
+    //   let node = this.node.find(node => node.info.id === nodeId);
+    //   console.log('机场监控设备-视频', node)
+    //   return this.selectedNodeDepot.info.points.map(point => {
+    //     const { id, point_type_name } = point;
+    //     const compo = CompoName[point_type_name] || '';
+    //     const key = `${nodeId}-${id}-${point_type_name}-${i++}`;
+    //     return { point, compo, key };
+    //   }).sort((a, b) => CompoOrder[a.compo] - CompoOrder[b.compo]);
+    // },
+  
     // 底部
     // 无人机-电量占比
     droneRemain() { 
@@ -633,7 +796,6 @@ export default {
       for (let d of this.drones) {
         remainVal = d.msg.battery.remain
       }
-      // console.log('获取数据-无人机-电量占比', remainVal)
       return remainVal;
     },
     // 无人机-高度
@@ -642,7 +804,6 @@ export default {
       for (let d of this.drones) {
         heightVal = d.msg.drone_status.height
       }
-      // console.log('获取数据-无人机-高度', heightVal)
       return heightVal;
     },
     // 无人机-飞行速度
@@ -651,7 +812,6 @@ export default {
       for (let d of this.drones) {
         speedVal = d.msg.drone_status.speed
       }
-      // console.log('获取数据-无人机-飞行速度', speedVal)
       return speedVal;
     },
     // 无人机-信号
@@ -660,7 +820,6 @@ export default {
       for (let d of this.drones) {
         signalVal = d.msg.drone_status.signal
       }
-      // console.log('获取数据-无人机-信号', signalVal)
       let signalNum = undefined
       // 五条信号显示个数
       // if(signalVal<=20){
@@ -675,6 +834,23 @@ export default {
       //   signalNum = 5
       // }
       return signalVal;
+    },
+    // 模式-判断是否返航
+    // TODO 获取返航和回巢时间，如果没有，就判断下现在的状态并获取当前时间来记录返航和回巢时间
+    droneStatus(){
+      let modeVal = undefined
+      for (let d of this.drones) {
+        console.log('无人机模式：', d.msg.drone_status.mode);
+        modeVal = d.msg.drone_status.mode
+        // if(d.msg.drone_status.mode == '返航'){
+        //   this.actualLand = updated_at
+        //   this.actualDuration = ''
+        // } else if(d.msg.drone_status.mode == '降落') { 
+        //   this.actualLand = ''
+        //   this.actualDuration = updated_at
+        // }
+      }
+      return modeVal;
     },
     // gps
     gpsObj() {
@@ -691,8 +867,26 @@ export default {
       for (let d of this.drones) {
         voltageVal = d.msg.drone_status.battery.voltage
       }
-      // console.log('获取数据-无人机-电压', voltageVal)
       return voltageVal;
+    },
+    // 机场id
+    depotsId() {
+      let depotsOlny = undefined
+      for (let d of this.depots) {
+        depotsOlny = d.info.id
+      }
+      return depotsOlny;
+    },
+    // 机场信息
+    selectedNodeDepot() {
+      return this.node.find(node => node.info.id === this.depotsId);
+    },
+    // 天气
+    getWeather() {
+      const { lng, lat } = this.selectedNodeDepot.status.status;
+      return Promise.all([
+        weather(lng, lat).then(data => this.weather = data.now || {})
+      ]);
     },
     //图片
     ...mapState({ 
@@ -704,29 +898,39 @@ export default {
         /** @type {SDWC.PlanRunning} */
         const running = state.plan.running.find(r => r.id === this.planId);
         return running ? running.running : null;
-      }
-    })
+      },
+      plans: state => state.plan.info,
+    }),
+     // 
+    isRunning() {
+      // 是否执行完成
+      return this.runningContent !== null;
+    },
+    plan() {
+      // 当前plans
+      return this.plans.find(p => p.id === this.planId);
+    },
     
-  },
-  created() {
-    this.setPreference({ mapType });
-
   },
   mounted() {
     this.swiper.slideTo(4, 1000, false)
     
-    // 
-    this.planId = this.$route.query.planId
-    this.starTime = this.$route.query.timeObj.starTime
-    this.flyDuration = this.$route.query.timeObj.flyDuration
-    this.landTime = this.$route.query.timeObj.landTime
-    // console.log('无人机的时间参数', this.timeObj) 
-    this.weatherTxt = this.$route.query.weather
-
-    // console.log('无人机开始执行任务时间', this.execute)
+    // 参数获取
+    this.planId =Number(this.$route.query.planId) 
+    this.starTime = this.$route.query.starTime
+    this.flyDuration = this.$route.query.flyDuration
+    this.landTime = this.$route.query.landTime
+    // this.weatherTxt = this.$route.query.weather
     
     // 订阅测试c'c'c'c 
     //  this.submm()
+    
+    this.getPlanWaypoints(this.plan).then(wp => {
+      
+      this.map = waypointsToMapProps(wp)
+      console.log('地图',this.map);
+    });
+   
 
     this.processSatus()
 
@@ -737,13 +941,8 @@ export default {
   },
   methods: {
     fullScreen(){},
-    
-    onSwiper(swiper) {
-      // console.log(swiper);
-    },
-    onSlideChange() {
-      // console.log('slide change');
-    },
+    onSwiper(swiper) {},
+    onSlideChange() {},
     // 获取当前时间
     parseTime(time, pattern) {
       if (arguments.length === 0 || !time) {
@@ -759,9 +958,12 @@ export default {
         } else if (typeof time === 'string') {
           time = time.replace(new RegExp(/-/gm), '/');
         }
-        if ((typeof time === 'number') && (time.toString().length === 10)) {
-          time = time * 1000
+        if(time !== null){
+          if ((typeof time === 'number') && (time.toString().length === 10)) {
+            time = time * 1000
+          }
         }
+       
         date = new Date(time)
       }
       const formatObj = {
@@ -787,31 +989,43 @@ export default {
     
     // 地图
     ...mapActions([
-      'setPreference'
+      'setPreference',
+      'clearDronePath'
+    ]),
+    ...mapActions([
+      'getPlanWaypoints'
     ]),
 
+     handlePathClear() {
+       console.log('清楚',this.drones[0]);
+       
+      this.clearDronePath(this.drones[0].info.id);
+    },
     // 订阅测试
     // submm() {
     //  let subval = MqttClient.mqtt.subscribe(`plans/${this.droneId}/status`);
-    //  console.log('订阅测试-返回值', subval)
     // }
     // 去除前面补零
     removeZero(val){
-      let str = val.toString()
-      let fistChar = str.substr(0, 1)
-      let fistNum = Number(fistChar)
-      if(fistNum == 0){
-        return Number(str.substr(1, 2))
-      }else{
-        return Number(str)
-      }
+      if(val !== null){
+        let str = val.toString()
+        let fistChar = str.substr(0, 1)
+        let fistNum = Number(fistChar)
+        if(fistNum == 0){
+          return Number(str.substr(1, 2))
+        }else{
+          return Number(str)
+        }
+      } 
     },
     // 时间转换成秒
     changeSecond(val){
       let onTime = this.parseTime(val,'{h}:{i}:{s}')
-      let onArr = onTime.toString().split(':');
-      let onSecond = this.removeZero(onArr[0])*3600 + this.removeZero(onArr[1])*60 + this.removeZero(onArr[2])
-      return onSecond
+      if(onTime !== null){
+        let onArr = onTime.toString().split(':');
+        let onSecond = this.removeZero(onArr[0])*3600 + this.removeZero(onArr[1])*60 + this.removeZero(onArr[2])
+        return onSecond
+      }
     },
     // 进度条状态
     processSatus(){
@@ -836,7 +1050,6 @@ export default {
       }
        
     },
-    // parseTime(currentDate,'{y}-{m}-{d} {h}:{i}:{s} 星期{a}')
     // 返回停飞页面
     goSuspend() {
       this.processSatus()
@@ -845,7 +1058,6 @@ export default {
         path: "/suspend",
         query: { planId: this.planId, flyStatus:this.flyStatus },
       });
-      // this.$router.push({ name: "suspend" });
     },
     // 视频和地图切换
     handleChage() {
@@ -855,21 +1067,41 @@ export default {
     // 判断是否降落
     async getPlanJobs() {
       this.job.loading = true;
-      // console.log('这是什么拿---', this.plan)
       const res = await getPlanJobs(this.planId);
       if (this.isRunning) {
         this.patchRunningJob(res, this.runningContent.job);
       }
       res.forEach(l => l.created_at = new Date(l.created_at));
       this.jobs = res;
+      console.log('任务历史',this.jobs)
       this.job.loading = false;
+      
       // if(this.jobs.files.name == "下载链接"){
         // this.$refs.jobFile.open(this.jobs.files.blobId);
         // 测试
         let blobID = 913
         // this.$refs.jobFile.open(blobID);
       // }
+
+      // 2021-07-14 新增内容
+      this.jobs.forEach(item => {
+        if(item.id == this.planId ){
+          console.log('具体files内容-飞行中：', item)
+          if(item.files['下载链接']){
+            console.log('有下载链接') 
+            this.picBlob(item.files['下载链接'])
+          }else{
+           console.log('没有下载链接') 
+          }
+        }
        
+      })
+       
+    },
+    // 获取具体任务下的图片集合
+    async picBlob(fileId) {
+      let res = await picBlob(fileId);
+      console.log('历史图片集合：', res)
     },
     /**
      * @param {SDWC.PlanJob[]} jobs
@@ -898,8 +1130,27 @@ export default {
         }
       }
     },
+    // 2021-07-21航点
+    async updateCurrentWaypoints() {
+      const waypoints = [];
+      for (const url of Object.values(this.drones[0].msg.waypoint)) {
+        const wp = await fetch(url)
+          .then(res =>res.text())
+          .then(text => parseWaypoints(text));
+        const i = waypoints.length;
+        wp.actions.forEach(a => a.id = `wp${i}_${a.id}`);
+        waypoints.push({
+          coordinates: wp.path,
+          markers: wp.actions
+        });
+      }
+      this.waypoints = waypoints;
+    },
 
-  }
+  },
+  created() {
+    this.setPreference({ mapType });
+  },
   
 }
 </script>
@@ -1138,6 +1389,25 @@ export default {
 #container .el-card__body{
   height:100%;
 }
+/* 机巢 */
+.small-map-rgt{
+  position: fixed;
+  bottom:260px;
+  left:unset;
+  right:24px;
+}
+.small-map-rgt-div{
+ height: calc(100% - 22px)
+}
+.small-map-rgt .fly{
+  height: 100%;
+}
+.small-map-rgt .custom{
+  /* display: none; */
+}
+.small-map-rgt .fly .sd-card {
+    margin: 0;
+}
 /* 底部 */
 .botm-wrap{
   position: fixed;
@@ -1291,6 +1561,7 @@ export default {
   height: 146px;
   background: url('assets/images/img.png')no-repeat center center;
   background-size: 100%;
+  opacity: 0.2;
 }
 /* .banner-wrap .swiper-button-prev,.banner-wrap .swiper-button-next{
   width: 24px;
