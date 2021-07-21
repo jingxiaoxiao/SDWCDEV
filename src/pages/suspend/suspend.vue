@@ -700,7 +700,7 @@ export default {
       handler(newValue,oldValue) {
         // 监听倒计时
         let djs = newValue.split(':')
-        console.log('监听倒计时数组,',djs);
+        // console.log('监听倒计时数组,',djs);
         if(djs[0] == '00'){
           if(djs[1]=='00'){
             if(djs[2]=='00'){
@@ -870,24 +870,32 @@ export default {
       }
       // 无人机 selectedNodeDrons
       // TODO 字段开机关机不确定
-      switch ( this.selectedNodeDepot.msg.depot_status.status )
+      console.log('无人机状态',this.selectedNodeDrons.msg.drone_status.status);
+      
+      switch ( this.selectedNodeDrons.msg.drone_status.status )
       {
         case 'error':
           this.equipLIstanbul[1].statusList[0].statusName ='关机';
+          break;
+        case 'standby':
+          this.equipLIstanbul[1].statusList[0].statusName ='待机';
+          break;
+        case 'flying':
+          this.equipLIstanbul[1].statusList[0].statusName ='飞行中';
           break;
         default:
           this.equipLIstanbul[1].statusList[0].statusName ='开机';
           break;
       }
-      if(this.selectedNodeDepot.msg.battery.remain > 90){
+      if(this.selectedNodeDrons.msg.battery.remain > 90){
         this.equipLIstanbul[1].statusList[1].statusName ='电量充足';
       } else{
         this.equipLIstanbul[1].statusList[1].statusName ='电量不足';
       }
       
-      this.equipLIstanbul[1].statusList[2].statusName ='信号' + this.selectedNodeDepot.msg.drone_status.signal ;
+      this.equipLIstanbul[1].statusList[2].statusName ='信号' + this.selectedNodeDrons.msg.drone_status.signal ;
       // this.equipLIstanbul[1].statusList[3].statusName ='卫星'  + this.selectedNodeDepot.msg.drone_status.gps.satcount + '星' + this.selectedNodeDepot.msg.drone_status.gps.type ;
-      this.equipLIstanbul[1].statusList[3].statusName ='卫星'  + this.selectedNodeDepot.msg.drone_status.gps.satcount + '星';
+      this.equipLIstanbul[1].statusList[3].statusName ='卫星'  + this.selectedNodeDrons.msg.drone_status.gps.satcount + '星';
        
       //  
     },

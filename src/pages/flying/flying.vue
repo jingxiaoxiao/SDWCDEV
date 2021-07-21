@@ -352,7 +352,7 @@ import Operation from '@/components/drone/operation.vue';
 import { getPlanJobs, picBlob } from '@/api/super-dock';
 import JobFile from '@/components/job-file/job-file.vue';
 
-import { weather, warning } from '@/api/heweather';
+import { weather, minutely, warning } from '@/api/heweather';
 
 import { waypointsToMapProps } from '@/pages/plan/common';
 import { parseWaypoints } from '@/util/waypoint-parser';
@@ -881,13 +881,6 @@ export default {
     selectedNodeDepot() {
       return this.node.find(node => node.info.id === this.depotsId);
     },
-    // 天气
-    getWeather() {
-      const { lng, lat } = this.selectedNodeDepot.status.status;
-      return Promise.all([
-        weather(lng, lat).then(data => this.weather = data.now || {})
-      ]);
-    },
     //图片
     ...mapState({ 
         /**
@@ -921,7 +914,7 @@ export default {
     this.flyDuration = this.$route.query.flyDuration
     this.landTime = this.$route.query.landTime
     // this.weatherTxt = this.$route.query.weather
-    
+    this.getWeather()
     // 订阅测试c'c'c'c 
     //  this.submm()
     
@@ -1145,6 +1138,17 @@ export default {
         });
       }
       this.waypoints = waypoints;
+    },
+    
+    // 天气
+    getWeather() {
+      const { lng, lat } = this.selectedNodeDepot.status.status;
+      console.log('天气',Promise.all([weather(lng, lat).then(data => this.weather = data.now || {}),warning(lng, lat).then(data => this.alert = data.warning || [])]));
+      
+      return Promise.all([
+        weather(lng, lat).then(data => this.weather = data.now || {}),
+        warning(lng, lat).then(data => this.alert = data.warning || [])
+      ]);
     },
 
   },
