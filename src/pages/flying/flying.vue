@@ -98,21 +98,33 @@
     </div>
   
     <!-- 机巢视频 -->
-    <!-- <div class="small-map small-map-rgt"> -->
-      <!-- <p class="map-coor">机场监控设备</p> -->
-      <!-- <div class="small-map-rgt-div"> -->
-        <!-- <template v-for="{ point, compo, key } of pointsDepot">
-                    <component
-                      :is="compo"
-                      :key="key"
-                      :info="selectedNodeDepot.info"
-                      :point="point"
-                      :status="selectedNodeDepot.status"
-                      :msg="selectedNodeDepot.msg"
-                    ></component>
-                  </template> -->
-      <!-- </div>
-    </div> -->
+    <div class="small-map small-map-rgt">
+      <p class="map-coor">机场监控设备</p>
+      <div class="small-map-rgt-div">
+        <template v-for="{ point, compo, key } of pointsDepot">
+          <!-- <component
+            :is="compo"
+            :key="key"
+            :info="selectedNodeDepot.info"
+            :point="point"
+            :status="selectedNodeDepot.status"
+            :msg="selectedNodeDepot.msg"
+            :starTime="starTime"
+            :flyDuration="flyDuration"
+            :landTime="landTime"
+            :videoBigShow="videoBigShow"
+          ></component> -->
+          <!-- Monitor -->
+          <sd-node-monitor
+            :key="key"
+            :point="point"
+            :status="selectedNodeDepot.status"
+            :msg="selectedNodeDepot.msg"
+            :info="selectedNodeDepot.info"
+          ></sd-node-monitor>
+        </template>
+      </div>
+    </div>
 
     <!-- 头部 -->
     <div class="head-wrap">
@@ -166,8 +178,6 @@
       </div>
     </div> -->
     
-    
-
      <!-- 底部 -->
     <div class="botm-wrap clearfix">
       <div class="botm-con">
@@ -320,7 +330,6 @@
       </div>
     </div>
 
-    
     <!-- 测试 -->
     <!-- {{droneId}} -->
     
@@ -345,6 +354,8 @@ import get from 'lodash/get';
 import { PlaceStyle } from '@/constants/drone-place-style';
 import Custom from '@/components/custom/custom.vue';
 import Settings from '@/components/settings/settings.vue';
+
+import MonitorDepot from '@/components/monitor/video.vue';
 
 import Monitor from '@/components/drone/video2.vue';
 import Operation from '@/components/drone/operation.vue';
@@ -515,7 +526,8 @@ export default {
     Operation,
     [JobFile.name]: JobFile,
     // DroneMap
-    [DroneMap.name]: DroneMap
+    [DroneMap.name]: DroneMap,
+    [MonitorDepot.name]:MonitorDepot
   },
   computed: {
     swiper() {
@@ -531,20 +543,7 @@ export default {
       'depots',
       'drones'
     ]),
-    // 无人机点线
-    // dronePlaceStyle() {
-    //   let style = {};
-    //   for (const d of this.drones) {
-    //     const mapPoint = d.info.points.find(p => p.point_type_name === 'map') || {};
-    //     style[d.info.id] = Object.assign({}, PlaceStyle, get(mapPoint, 'params.common.place', {}));
-    //   }
-    //   return style;
-    // },
-    // placeStyle() {
-    //   if (!this.point.params) return PlaceStyle;
-    //   return Object.assign({}, PlaceStyle, get(this.point, 'params.common.place', {}));
-    // },
-    // drones[0]
+    // 无人机
     msgD(){
       for (const d of this.drones) {
         return d
@@ -603,22 +602,7 @@ export default {
             }
           }
         }
-        // if (d.status.code !== 0 || position.length <= 0 || Object.keys(place).length <= 0) continue;
-        // const droneId = d.info.id;
-        // const placeStyle = this.placeStyle[droneId];
-        // const origin = position[0];
-        // for (const [placeName, pos] of Object.entries(place)) {
-        //   const style = placeStyle[placeName] || {};
-        //   if (style.stroke) {
-        //     polylines.push({
-        //       name: `${droneId}_${placeName}`,
-        //       style,
-        //       coordinates: [origin, pos]
-        //     });
-        //   }
-        // }
       }
-      // polylines = this.map.polylines[0]
       console.log('地图路线d',polylines);
       
       return polylines;
@@ -685,23 +669,6 @@ export default {
             position: pos
           });
       }
-      // for (const d of this.drones) {
-      //   const { position, place } = d.msg;
-      //   if (d.status.code !== 0 || position.length <= 0 || Object.keys(place).length <= 0) continue;
-        
-      //   const droneId = d.info.id;
-      //   const placeStyle = this.placeStyle[droneId];
-      //   for (const [placeName, pos] of Object.entries(place)) {
-      //     const style = placeStyle[placeName] || {};
-      //     markers.push({
-      //       type: 'place',
-      //       id: `${droneId}_${placeName}`,
-      //       name: placeName,
-      //       style: style,
-      //       position: pos
-      //     });
-      //   }
-      // }
       return markers;
     },
     markers() {
@@ -773,21 +740,29 @@ export default {
       }).sort((a, b) => CompoOrder[a.compo] - CompoOrder[b.compo]);
     },
 
-    // 机场监控设备-视频
-    // pointsDepot() {
-    //   let i = 0;
-    //   const nodeId = this.depotsId;
-    //   console.log('机场监控设备-视频-depotid', this.depotsId)
-    //    console.log('机场监控设备-视频-depotid2', nodeId)
-    //   let node = this.node.find(node => node.info.id === nodeId);
-    //   console.log('机场监控设备-视频', node)
-    //   return this.selectedNodeDepot.info.points.map(point => {
-    //     const { id, point_type_name } = point;
-    //     const compo = CompoName[point_type_name] || '';
-    //     const key = `${nodeId}-${id}-${point_type_name}-${i++}`;
-    //     return { point, compo, key };
-    //   }).sort((a, b) => CompoOrder[a.compo] - CompoOrder[b.compo]);
-    // },
+    // 2021-07-21机场监控设备-视频
+    pointsDepot() {
+      let i = 1;
+      const nodeId = this.depotsId;
+      let node = this.node.find(node => node.info.id === nodeId);
+     
+      // // 之前代码
+      let videoObj 
+      this.selectedNodeDepot.info.points.map(point => {
+        if(point.point_type_name == "livestream_webrtc2"){
+          console.log('视频',point);
+          const { id, point_type_name } = point;
+          const compo = '';
+          const key = `${nodeId}-${id}-${point_type_name}-${i++}`;
+          videoObj =  { point, compo, key }
+          // return { point, compo, key };
+        }
+      });
+      console.log('视频2',videoObj);
+      let videoArr = []
+      videoArr.push(videoObj)
+      return videoArr
+    },
   
     // 底部
     // 无人机-电量占比
@@ -1406,6 +1381,9 @@ export default {
 .small-map-rgt .fly{
   height: 100%;
 }
+.small-map .monitor-webrtc__overlay{
+  top: 100px;
+}
 .small-map-rgt .custom{
   /* display: none; */
 }
@@ -1558,6 +1536,7 @@ export default {
   margin: 0 5px;
   width: 266px;
   height: 182px;
+  opacity: 0.01;
 }
 .banner-wrap .img-pic{
   padding:6px 8px;
@@ -1565,7 +1544,6 @@ export default {
   height: 146px;
   background: url('assets/images/img.png')no-repeat center center;
   background-size: 100%;
-  opacity: 0.2;
 }
 /* .banner-wrap .swiper-button-prev,.banner-wrap .swiper-button-next{
   width: 24px;
