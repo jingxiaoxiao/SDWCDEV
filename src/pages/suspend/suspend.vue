@@ -19,7 +19,8 @@
     <!-- 右侧时间 -->
     <div class="time-rgt">
       <div class="time-cont">
-        <span class="time-date">{{ parseTime(currentDate,'{y}-{m}-{d} {h}:{i}:{s} 星期{a}') }}</span>
+        
+        <span class="time-date">{{currentTime}} 星期{{ (parseTime(currentDate,'{y}-{m}-{d} {h}:{i}:{s} 星期{a}')).split('星期')[1] }}</span>
         <!-- <img class="weather-icon" src="/assets/images/icon_sun.png"> -->
         <span class="weather-icon-txt">{{weather.text}}</span>
       </div>
@@ -36,7 +37,7 @@
           <!-- <p class="uav-start"  @click="handleExecute" >立即起飞</p> -->
           <p class="uav-start" v-if="!isRunning"  @click="handleExecute(1)" >立即起飞</p>
           <p class="uav-start" v-else  @click="handleExecute(0)" >立即停飞</p>
-          <p class="uav-start"  @click="ces" >测试跳转页面</p>
+          <!-- <p class="uav-start"  @click="ces" >测试跳转页面</p> -->
        
           <p class="item-time">
             <!-- {{hour}}:{{min}}:{{second}} -->
@@ -448,6 +449,9 @@ export default {
       },
        // 当前日期
       currentDate:dateTime,
+      // 获取实时当前时间
+      timer: "",//定义一个定时器的变量
+      currentTime: new Date(), // 获取当前时间
       // 巡检倒计时
       day:'',
       hour:'',
@@ -558,6 +562,8 @@ export default {
       flyDuration:'',
       // 飞行状态
       flyStatus:0,
+      // 飞行中的id
+      flyId:undefined,
       planId:0
 
     }
@@ -717,15 +723,33 @@ export default {
     }
   },
   created() {
+    var _this = this; //声明一个变量指向Vue实例this，保证作用域一致
+    this.timer = setInterval(function() {
+      _this.currentTime = //修改数据date
+        new Date().getFullYear() +
+        "-" +
+        _this.appendZero((new Date().getMonth() + 1)) +
+        "-" +
+        _this.appendZero(new Date().getDate()) +
+        " " +
+        _this.appendZero(new Date().getHours()) +
+        ":" +
+        _this.appendZero(new Date().getMinutes()) +
+        ":" +
+        _this.appendZero(new Date().getSeconds());
+    }, 1000);
+
+    console.log('飞行页面传回的planid是',this.$route.query);
+    this.flyStatus = this.$route.query.flyStatus
+    this.flyId = Number(this.$route.query.planId)
+    console.log('飞行页面传回的',this.flyId);
+    
     this.setPreference({ mapType });
   },
   mounted () {
-    this.flyStatus = this.$route.query.flyStatus
     // this.countTime()
-
-   
-
-
+    
+    
 
     this.getIndexPlan()
     // 
@@ -973,6 +997,7 @@ export default {
       var execteArr = execteTime.toString().split(':');
       let currentSecond = this.removeZero(execteArr[0])*3600 + this.removeZero(execteArr[1])*60 + this.removeZero(execteArr[2])
 
+      // 倒计时任务的index
       let index = 0
       // 将要执行的任务
       dataList.forEach((item, ind)=> {
@@ -986,49 +1011,53 @@ export default {
           // TODO 首先判断是否有正在执行的任务
           // 无执行状态
 
-          // 获取要执行的任务
-          if((doSecond > currentSecond) && (this.onTask.length == 0)) {
-            index = ind
-            this.onTask.push(item)
-            return false;
+            console.log('ddd',this.flyId);
+            console.log('ddd2',item.id);
+          if(this.flyId == item.id){
+            if(this.flyStatus == '4'){
+              console.log('有flyId且等于4-1');
+               item.flyProcess = 100
+            }else{
+              if((doSecond > currentSecond) && (this.onTask.length == 0)) {
+                console.log('有flyId且不等于4-2', this.flyStatus);
+                index = ind
+                this.onTask.push(item)
+                return false;
+              }
+            }
+           
+          }else{
+            if((doSecond > currentSecond) && (this.onTask.length == 0)) {
+              
+            console.log('mei有等于flyId');
+              index = ind
+              this.onTask.push(item)
+              return false;
+            }
           }
+          // 获取要执行的任务
+          // if((doSecond > currentSecond) && (this.onTask.length == 0)) {
+          //   console.log('测试1', item);
+          //   console.log('测试2', this.flyId);
+          //   if(this.flyId == item.id){
+          //     console.log('有flyId-1', this.flyId);
+          //     if(this.flyStatus !== '4'){
+          //       console.log('有flyId且不等于4-2', this.flyStatus);
+          //       index = ind
+          //       this.onTask.push(item)
+          //     }
+          //     console.log('有flyId且等于4-3', this.flyStatus);
+          //     return false;
+          //   } else {
+          //     console.log('没有flyId', ind);
+          //     index = ind
+          //     this.onTask.push(item)
+          //     return false;
+          //   }
+            
+          // }
           
         }
-        
-      })
-
-      dataList.forEach((itmm, indd) => {
-        // 是否有正在执行的项目
-        // console.log('是否有正在执行的项目',this.hasRunning)
-        if(!this.hasRunning){
-          if(indd > index){
-            itmm.flyProcess = 0
-          }else if(indd == index){
-            switch(this.flyStatus) {
-              case '1':
-                itmm.flyProcess = 25
-                break;
-              case '2':
-                itmm.flyProcess = 50
-                break;
-              case '3':
-                itmm.flyProcess = 75
-                break;
-              case '4':
-                itmm.flyProcess = 100
-                break;
-              default:
-                itmm.flyProcess = 0
-            } 
-          }
-        } else{
-          if(indd < (index-1)){
-            itmm.flyProcess = 100
-          } else{
-            itmm.flyProcess = 0
-          }
-        }
-        
         
       })
       
@@ -1050,6 +1079,51 @@ export default {
 
       // 倒计时
       this.countTime()
+      
+      // 所有任务dataList
+      dataList.forEach((itmm, indd) => {
+          console.log('当前任务为：',itmm);
+        // if(itmm.id == flyId){
+          
+        // }
+        // 是否有正在执行的项目
+        // console.log('是否有正在执行的项目',this.hasRunning)
+        if(!this.hasRunning){
+          if(indd > index){
+            itmm.flyProcess = 0
+          }else if(indd == index){
+            if(itmm.id == this.flyId){
+              switch(this.flyStatus) {
+                case '1':
+                  itmm.flyProcess = 25
+                  break;
+                case '2':
+                  itmm.flyProcess = 50
+                  break;
+                case '3':
+                  itmm.flyProcess = 75
+                  break;
+                case '4':
+                  itmm.flyProcess = 100
+                  break;
+                default:
+                  itmm.flyProcess = 0
+              }
+            }else{
+              itmm.flyProcess = 0 
+            }
+             
+          }
+        } else{
+          if(indd < (index-1)){
+            itmm.flyProcess = 100
+          } else{
+            itmm.flyProcess = 0
+          }
+        }
+        
+        
+      })
     },
     // 倒计时
     countTime() {
@@ -1185,8 +1259,10 @@ export default {
 
         // 航点检测获取
         if(item.dialog.buttons[1].name == "↑开始起飞↑"){
-          sef.$nextTick(() => this.$refs.planDialog.open());
-          // sef.$nextTick(() => this.$refs.planDialog.close());
+          // 显示自带弹框
+          // sef.$nextTick(() => this.$refs.planDialog.open());
+          // 隐藏自带弹框
+          sef.$nextTick(() => this.$refs.planDialog.close());
           // 
           if('items' in item.dialog){
             if(item.dialog.items.length !== 0){
@@ -1319,9 +1395,22 @@ export default {
        
       }
 
-    }
+    },
+    // 小于10补0
+    appendZero(obj) {
+      if (obj < 10) {
+        return "0" + obj;
+      } else {
+        return obj;
+      }
+    },
 
   },
+  beforeDestroy() {
+    if (this.timer) {
+      clearInterval(this.timer); // 在Vue实例销毁前，清除我们的定时器
+    }
+  }
 
 }
 </script>
@@ -1330,7 +1419,8 @@ export default {
 <style>
 .overview-map {
   margin: 0;
-  height: 996px;
+  /* height: 996px; */
+  height:calc(100vh - 136px);
 }
 .overview-map .el-card__body {
   height: 100%;
@@ -1342,11 +1432,12 @@ export default {
 
 
 .suspend-page{
-  width:1920px;
+  /* width:1920px; */
+  width:100%;
   background: url('assets/images/s-bg.png')no-repeat center center;
   background-size: cover;
   position: relative;
-  /* overflow: hidden; */
+  overflow: hidden;
 }
 .head-bg{
   position: fixed;
@@ -1425,7 +1516,8 @@ export default {
   display:flex;
   z-index:4;
   height: calc(100vh - 86px);
-  overflow-y: auto;
+  /* overflow-y: auto; */
+  overflow: hidden;
 }
 /* 样式 */
 .suspend-body::-webkit-scrollbar {width: 12px;}
@@ -1449,9 +1541,11 @@ export default {
   background-size:cover;
 }
 .suspend-item2{
-  height:336px;
+  /* height:336px; */
+  height:286px;
   background:url('assets/images/s-l-bg1.png')no-repeat center top;
-  background-size:cover;
+  /* background-size:cover; */
+  background-size:100% 100%;
 }
 .item-title{
   margin:0;
@@ -1479,7 +1573,8 @@ export default {
   text-shadow: 0 0 14px #4AD4FF;
 }
 .item-time{
-  font-size:100px;
+  /* font-size:100px; */
+  font-size: 92px;
   color:#fff;
   display:block;
   font-weight:bold;
@@ -1516,7 +1611,7 @@ export default {
 .equip-item{
   display:flex;
   align-items: center;
-  margin:10px 0 0;
+  margin:5px 0 0;
   padding-bottom:15px;
 }
 .equip-item-bor{
@@ -1561,6 +1656,7 @@ export default {
   font-size:14px;
   color:#B5E4FF;
   text-shadow: 0 0 14px #4AD4FF;
+  margin: 4px 0;
 }
 .task-name{
   display:block;
@@ -1573,6 +1669,9 @@ export default {
   margin-bottom: 10px;
   overflow: hidden;
 
+}
+.task-table .el-table::before{
+  height: 0;
 }
 /* 覆盖 */
 .el-table td,.el-table th{
@@ -1627,7 +1726,9 @@ export default {
 .suspend-right{
   flex-grow: 1;
   width:1210px;
-  height:1016px;
+  /* height:1016px; */
+  /* height:calc(100% - 86px); */
+  height:calc(100% - 24px);
   margin-left: 20px;
   background: url('assets/images/s-r-bg.png')no-repeat center top;
   background-size:100% 100%;
@@ -1646,7 +1747,8 @@ export default {
   position: absolute;
   left:0;
   bottom:4px;
-  margin: 0 18px 10px;
+  /* margin: 0 18px 10px; */
+  margin: 0 25px 10px;
   width:1172px;
   height:246px;
   background:url('assets/images/sr-bg.png')no-repeat center top;
@@ -1654,6 +1756,9 @@ export default {
 }
 .suspend-bottom-con{
   display:flex;
+}
+.suspend-bottom-con .monitor-webrtc__overlay{
+  top:80px;
 }
 .suspend-bottom-left{
   flex-shrink: 0;

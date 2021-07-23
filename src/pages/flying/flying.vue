@@ -139,15 +139,15 @@
       <div class="inspect-cont">
         <img class="inspect-icon" src="/assets/images/icon_time_full.png">
         <span>当前巡检：</span><em>{{duration}}</em>
-        <h4 style="color:red">无人机模式：{{droneStatus}}</h4>
-        <h4 style="color:red">无人机模式-返航时间：{{actualLand}}</h4>
+        <h4 style="color:red;display:none;">无人机模式：{{droneStatus}}</h4>
+        <!-- <h4 style="color:red">无人机模式-返航时间：{{actualLand}}</h4> -->
       </div>
     </div>
 
     <!-- 右侧时间 -->
     <div class="time-rgt">
       <div class="time-cont">
-        <span class="time-date">{{ parseTime(currentDate,'{y}-{m}-{d} {h}:{i}:{s} 星期{a}') }}</span>
+        <span class="time-date">{{currentTime}} 星期{{ (parseTime(currentDate,'{y}-{m}-{d} {h}:{i}:{s} 星期{a}')).split('星期')[1] }}</span>
         <!-- <img class="weather-icon" src="/assets/images/icon_sun.png"> -->
          <span class="weather-icon-txt">{{weather.text}}</span>
         
@@ -484,6 +484,9 @@ export default {
       ],
       // 当前日期
       currentDate:dateTime,
+      // 获取实时当前时间
+      timer: "",//定义一个定时器的变量
+      currentTime: new Date(), // 获取当前时间
       // mapType
       mapType: 'sd-map-mapbox',
       // 停飞页面传来值
@@ -629,7 +632,7 @@ export default {
       
       for (let d of this.drones) {
         
-      console.log('无人机信息1', d);
+      // console.log('无人机信息1', d);
         const position = d.msg.position[0];
         if (d.status.code === 0 && typeof position === 'object') {
           markers.push({
@@ -832,18 +835,21 @@ export default {
     droneStatus(){
       let modeVal = undefined
       for (let d of this.drones) {
-        console.log('无人机模式：', d.msg.drone_status.mode);
-        console.log('无人机模式-日志：',d.msg);
+        // console.log('无人机模式：', d.msg.drone_status.mode);
+        // console.log('无人机模式-日志：',d.msg);
         if(d.msg.notification && d.msg.notification.length>0){
           
           if(d.msg.notification[0].msg == "开始起飞"){
             this.actualStar = this.timestampToTime(d.msg.notification[0].time)
             this.flyStatus = 2
+            console.log('无人机模式状态-开始起飞', this.flyStatus);
+            
           }
           if(d.msg.notification[0].msg == "开始返航"){
             this.actualLand = this.timestampToTime(d.msg.notification[0].time)
             this.startLandShow = true
             this.flyStatus = 3
+             console.log('无人机模式状态-开始返航', this.flyStatus);
           }
           // 先“返航完成”，后“任务执行完成”
           // TODO不知道哪个时间是定义为降落时间
@@ -852,6 +858,7 @@ export default {
             
             this.actualDuration = this.timestampToTime(d.msg.notification[0].time) 
             this.flyStatus = 4
+            console.log('无人机模式状态-任务执行完成', this.flyStatus);
           }
         }
 
@@ -1051,18 +1058,38 @@ export default {
       // 当前状态
       let onHms = this.changeSecond(new Date())
       // 起飞 this.starTime 
-      let starHms = this.changeSecond(this.starTime)
+      let starHms;
+      let landHms;
+      let durateHms;
+      if(this.actualStar != ''){
+        starHms = this.changeSecond(this.actualStar)
+      } else{
+        starHms = this.changeSecond(this.starTime)
+      }
       // 返航 this.landTime 
-      let landHms = this.changeSecond(this.landTime)
-      // 降落 this.flyDuration
-      let durateHms = this.changeSecond(this.flyDuration)
+      if(this.actualLand != ''){
+        landHms = this.changeSecond(this.actualLand)
+      } else{
+        landHms = this.changeSecond(this.landTime)
+      }
+      // 降落 this.flyDuration  actualDuration
+      if(this.actualDuration != ''){
+        durateHms = this.changeSecond(this.actualDuration)
+      } else{
+        durateHms = this.changeSecond(this.flyDuration)
+      }
+      
+      console.log('页面无人机状态-zzz-当前',onHms);
       if(onHms < starHms){
         this.flyStatus = 1
       } else if(starHms < onHms < landHms){
+        console.log('页面无人机状态-zzz-起飞',starHms);
         this.flyStatus = 2
       } else if(landHms < onHms < durateHms){
+        console.log('页面无人机状态-zzz-返航',landHms);
         this.flyStatus = 3
       } else if(onHms > durateHms){
+        console.log('页面无人机状态-zzz-降落',durateHms);
         this.flyStatus = 4
       } else{
         this.flyStatus = 0
@@ -1071,8 +1098,11 @@ export default {
     },
     // 返回停飞页面
     goSuspend() {
-      this.processSatus()
+      // this.processSatus()
       // 飞行状态 flyStatus
+      // let mm = 4
+      console.log('页面无人机状态-zzz-最终',this.flyStatus);
+      
       this.$router.push({
         path: "/suspend",
         query: { planId: this.planId, flyStatus:this.flyStatus },
@@ -1176,11 +1206,41 @@ export default {
         warning(lng, lat).then(data => this.alert = data.warning || [])
       ]);
     },
+    // 小于10补0
+    appendZero(obj) {
+      if (obj < 10) {
+        return "0" + obj;
+      } else {
+        return obj;
+      }
+    },
+
 
   },
   created() {
+     var _this = this; //声明一个变量指向Vue实例this，保证作用域一致
+    this.timer = setInterval(function() {
+      _this.currentTime = //修改数据date
+        new Date().getFullYear() +
+        "-" +
+        _this.appendZero((new Date().getMonth() + 1)) +
+        "-" +
+        _this.appendZero(new Date().getDate()) +
+        " " +
+        _this.appendZero(new Date().getHours()) +
+        ":" +
+        _this.appendZero(new Date().getMinutes()) +
+        ":" +
+        _this.appendZero(new Date().getSeconds());
+    }, 1000);
+
     this.setPreference({ mapType });
   },
+  beforeDestroy() {
+    if (this.timer) {
+      clearInterval(this.timer); // 在Vue实例销毁前，清除我们的定时器
+    }
+  }
   
 }
 </script>
