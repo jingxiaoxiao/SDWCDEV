@@ -98,7 +98,7 @@
     </div>
   
     <!-- 机巢视频 -->
-    <div class="small-map small-map-rgt">
+    <div class="small-map small-map-rgt" v-show="startLandShow">
       <p class="map-coor">机场监控设备</p>
       <div class="small-map-rgt-div">
         <template v-for="{ point, compo, key } of pointsDepot">
@@ -271,15 +271,30 @@
               </div>
               <div class="process-txt-li">
                   <p :class="flyStatus === 2 ? 'status curr' : 'status'">起飞</p>
-                  <p class="time">{{starTime}}</p>
+                  <template v-if="actualStar != ''">
+                    <p class="time">{{actualStar}}</p>
+                  </template>
+                  <template v-else>
+                    <p class="time">{{starTime}}</p>
+                  </template>
               </div>
               <div class="process-txt-li">
                   <p :class="flyStatus === 3 ? 'status curr' : 'status'">返航</p>
-                  <p class="time">{{landTime}}</p>
+                  <template v-if="actualLand != ''">
+                    <p class="time">{{actualLand}}</p>
+                  </template>
+                  <template v-else>
+                    <p class="time">{{landTime}}</p>
+                  </template>
               </div>
               <div class="process-txt-li">
                   <p :class="flyStatus === 4 ? 'status curr' : 'status'">降落</p>
-                  <p class="time">{{flyDuration}}</p>
+                  <template v-if="actualDuration != ''">
+                    <p class="time">{{actualDuration}}</p>
+                  </template>
+                  <template v-else>
+                    <p class="time">{{flyDuration}}</p>
+                  </template>
               </div>
             </div>
             <!-- banner -->
@@ -476,9 +491,11 @@ export default {
       starTime:'2021-05-25 15:45:22',
       flyDuration:'2021-05-25 15:55:22',
       landTime:'2021-05-25 16:45:22',
-       // actual实际时间
+      // actual实际时间
+      actualStar:'',//实际起飞时间
       actualLand:'',//实际返航时间
       actualDuration:'',//实际降落时间
+      startLandShow: false, //是否开始返航
       // 天气
       weatherTxt:'',
       // 视频是否是大屏
@@ -816,6 +833,28 @@ export default {
       let modeVal = undefined
       for (let d of this.drones) {
         console.log('无人机模式：', d.msg.drone_status.mode);
+        console.log('无人机模式-日志：',d.msg);
+        if(d.msg.notification && d.msg.notification.length>0){
+          
+          if(d.msg.notification[0].msg == "开始起飞"){
+            this.actualStar = this.timestampToTime(d.msg.notification[0].time)
+            this.flyStatus = 2
+          }
+          if(d.msg.notification[0].msg == "开始返航"){
+            this.actualLand = this.timestampToTime(d.msg.notification[0].time)
+            this.startLandShow = true
+            this.flyStatus = 3
+          }
+          // 先“返航完成”，后“任务执行完成”
+          // TODO不知道哪个时间是定义为降落时间
+          // TODO 任务执行完成 时图片下载完毕可以获取图片了
+          if(d.msg.notification[0].msg == "任务执行完成"){
+            
+            this.actualDuration = this.timestampToTime(d.msg.notification[0].time) 
+            this.flyStatus = 4
+          }
+        }
+
         modeVal = d.msg.drone_status.mode
         // if(d.msg.drone_status.mode == '返航'){
         //   this.actualLand = updated_at
@@ -881,6 +920,7 @@ export default {
     
   },
   mounted() {
+
     this.swiper.slideTo(4, 1000, false)
     
     // 参数获取
@@ -953,6 +993,17 @@ export default {
         return value || 0
       })
       return time_str
+    },
+    // 时间转换mmTime 
+    timestampToTime(timestamp) {
+      var date = new Date(timestamp * 1000)//时间戳为10位需*1000，时间戳为13位的话不需乘1000
+      var Y = date.getFullYear() + '-'
+      var M = (date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1) : date.getMonth()+1) + '-'
+      var D = (date.getDate() < 10 ? '0'+date.getDate() : date.getDate()) + ' '
+      var h = (date.getHours() < 10 ? '0'+date.getHours() : date.getHours()) + ':'
+      var m = (date.getMinutes() < 10 ? '0'+date.getMinutes() : date.getMinutes()) + ':'
+      var s = (date.getSeconds() < 10 ? '0'+date.getSeconds() : date.getSeconds())
+      return Y+M+D+h+m+s;
     },
     
     // 地图
