@@ -66,11 +66,16 @@
     <!-- 拍照 -->
     <div class="btm-btn">
       <div class="btm-btn-item btm-btn-over"  v-if="availableActions.length==0">无视频</div>
-      <div class="btm-btn-item"  v-for="a of availableActions" :key="a.method" @click="handleAction(a.method)">{{a.label || a.method}}</div>
+      <div class="btm-btn-item">重新聚焦</div>
+      <div class="btm-btn-item">重新聚焦</div>
+      <div class="btm-btn-item">重新聚焦</div>
+      <div class="btm-btn-item">重新聚焦</div>
+      <div class="btm-btn-item">重新聚焦</div>
+      <!-- <div class="btm-btn-item"  v-for="a of availableActions" :key="a.method" @click="handleAction(a.method)">{{a.label || a.method}}</div> -->
     </div>
 
     <!--  v-if="streamAvailable" -->
-    <template v-if="streamAvailable">
+    <template>
       <!-- 云台自己 -->
       <div class="center-control">
         <img class="control-poit control-top"  @click="handleGimUp(2)" src="/assets/images/Polygon1.png" alt="">
@@ -807,6 +812,7 @@ export default {
   height: 48px;
   position:relative;
   float:left;
+  margin-left:10px;
 }
 .control-ok{
   width: 48px;
@@ -845,7 +851,7 @@ export default {
   margin-top:124px;
   float: right;
   margin-right:10px;
-  width: 222px;
+  width: 244px;
 }
 .btm-btn-item{
   float: left;
