@@ -189,20 +189,20 @@
               <p class="data-value"><em class="data-val">{{droneSpeed}}</em><i class="data-unit">m/s</i></p>
             </div>
             <div class="data-li">
-              <span class="data-label">相对高度：</span>
-              <p class="data-value"><em class="data-val">{{droneHeight}}</em><i class="data-unit">m</i></p>
-            </div>
-            <div class="data-li">
               <span class="data-label">电量：</span>
               <p class="data-value"><em class="data-val">{{droneRemain}}</em><i class="data-unit">%</i></p>
             </div>
             <div class="data-li">
-              <span class="data-label">电压：</span>
-              <p class="data-value"><em class="data-val">{{droneVoltage}}</em><i class="data-unit">V</i></p>
-            </div>
-            <div class="data-li">
               <span class="data-label">信号强度</span>
               <p class="data-value"><em class="data-val">{{droneSignal}}</em><i class="data-unit">%</i></p>
+            </div>
+            <div class="data-li">
+              <span class="data-label">相对高度：</span>
+              <p class="data-value"><em class="data-val">{{droneHeight}}</em><i class="data-unit">m</i></p>
+            </div>
+            <div class="data-li">
+              <span class="data-label">电压：</span>
+              <p class="data-value"><em class="data-val">{{droneVoltage}}</em><i class="data-unit">V</i></p>
             </div>
             <div class="data-li">
               <span class="data-label">GPS</span>
@@ -310,11 +310,11 @@
                         @slideChange="onSlideChange"
                         >
                   <!-- slides -->
-                  <swiper-slide v-for="item in bannerList" :key="item.id">
+                  <swiper-slide v-for="(item, index) in bannerList" :key="index">
                     <div class="img-pic">
-                      <!-- <img :src="item.imgUrl" alt=""> -->
+                      <img :src="item.imgUrl" alt="">
                     </div>
-                    <p class="swiper-txt">{{item.time}}</p>
+                    <p class="swiper-txt">{{item.time}}-{{index}}</p>
                   </swiper-slide>             
                   <!-- Optional controls -->
                   <!-- <div class="swiper-button-prev" slot="button-prev"></div> -->
@@ -344,6 +344,10 @@
         </div>
       </div>
     </div>
+
+    <!-- 放大图片 -->
+    <!-- //显示图片的组件 -->
+    <sd-pic-show :imgUrl="picurl" :imgShow="imgShow" :list="bannerList" :curInd="currInd" @closeimg="imgClose"></sd-pic-show>
 
     <!-- 测试 -->
     <!-- {{droneId}} -->
@@ -383,6 +387,8 @@ import { weather, minutely, warning } from '@/api/heweather';
 import { waypointsToMapProps } from '@/pages/plan/common';
 import { parseWaypoints } from '@/util/waypoint-parser';
 
+import PicShow from './picShow.vue';
+
 
 const CompoName = {
   // 'map': DroneMap.name,
@@ -406,6 +412,7 @@ const CompoOrder = {
   // [Control.name]: 9,
   [Settings.name]: 10,
 };
+let _that = this
 
 
 export default {
@@ -440,45 +447,30 @@ export default {
           }
       },
        // banner
-      swiperOption: {
-        slidesPerView:4,
-        simulateTouch:true,
-        loop: true,
-        observer: true,
-        observeParents: true,
-        autoplay: {
-          delay: 1000,
-          disableOnInteraction: false
-        },
-        effect: 'slide',
-        navigation: {
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev',
-        }
-      },
+      swiperOption: {},
       bannerList:[
         {
           id:'001',
-          imgUrl:'/assets/images/product-img02.jpg',
+          imgUrl: '../assets/images/airport-icon1.png',
           time:'2021-06-04 16:55:35'
         },
          {
           id:'002',
-          imgUrl:'/assets/images/product-img02.jpg',
+          imgUrl: '../assets/images/airport-icon2.png',
           time:'2021-06-04 16:55:35'
         },
          {
           id:'003',
-          imgUrl:'/assets/images/product-img02.jpg',
+          imgUrl: '../assets/images/airport-icon3.png',
           time:'2021-06-04 16:55:35'
         },
          {
           id:'004',
-          imgUrl:'/assets/images/product-img02.jpg',
+          imgUrl: '../assets/images/airport-icon4.png',
           time:'2021-06-04 16:55:35'
         }, {
           id:'005',
-          imgUrl:'/assets/images/product-img02.jpg',
+          imgUrl: "../assets/images/airport-icon5.png",
           time:'2021-06-04 16:55:35'
         }
       ],
@@ -525,6 +517,11 @@ export default {
       },
       // 2021-07-20
       waypoints: [],
+      // 图片放大
+      picurl:'',
+      imgShow:false,
+      currInd:undefined
+
     }
   },
   watch: {
@@ -547,7 +544,8 @@ export default {
     [JobFile.name]: JobFile,
     // DroneMap
     [DroneMap.name]: DroneMap,
-    [MonitorDepot.name]:MonitorDepot
+    [MonitorDepot.name]:MonitorDepot,
+    [PicShow.name]: PicShow
   },
   computed: {
     swiper() {
@@ -1214,11 +1212,51 @@ export default {
         return obj;
       }
     },
-
+    // 预览大图关闭
+    imgClose(){
+      this.imgShow = false
+    },
 
   },
   created() {
-     var _this = this; //声明一个变量指向Vue实例this，保证作用域一致
+    var _this = this; 
+
+    // 
+    // slidesPerView: 5,
+    //     initialSlide :2,
+    //     centeredSlides: true,
+    //     on:{
+    //         tap: function () {
+    //           _this.imgShow = true;
+    //           _this.imgurl = _this.honorList[this.clickedIndex].imgurl
+    //             }
+    //         },
+    _this.swiperOption= {
+        slidesPerView:4,
+        simulateTouch:true,
+        // loop: true,
+        observer: true,
+        observeParents: true,
+        autoplay: {
+          delay: 1000,
+          disableOnInteraction: false
+        },
+        effect: 'slide',
+        navigation: {
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev',
+        },
+        on:{
+            tap: function () {
+              console.log('什么情况',_this.bannerList[this.clickedIndex].imgUrl);
+              _this.imgShow = true
+              _this.currInd = this.clickedIndex
+              _this.picurl = _this.bannerList[this.clickedIndex].imgUrl
+            }
+        },
+      },
+
+    // 
     this.timer = setInterval(function() {
       _this.currentTime = //修改数据date
         new Date().getFullYear() +
@@ -1435,7 +1473,8 @@ export default {
   width:401px;
   height: 260px;
   position: fixed;
-  bottom:260px;
+  /* bottom:260px; */
+  bottom:220px;
   left: 24px;
   z-index: 2;
   /* background: url('assets/images/bg.png')no-repeat center center rgba(255,255,255,0.1); */
@@ -1482,7 +1521,8 @@ export default {
 /* 机巢 */
 .small-map-rgt{
   position: fixed;
-  bottom:260px;
+  /* bottom:260px; */
+  bottom:220px;
   left:unset;
   right:24px;
 }
@@ -1507,7 +1547,8 @@ export default {
   bottom: 0;
   z-index: 1;
   width: 100%;
-  height: 334px;
+  /* height: 334px; */
+  height: 300px;
   background: url('assets/images/bottom.png') no-repeat center top;
   background-size: cover
 }
@@ -1517,7 +1558,7 @@ export default {
 
 /* bot-lft */
 .btm-lft{
-  width: 20%;
+  width: 24%;
   flex-shrink: 0;
   text-align: right;
 }
@@ -1525,8 +1566,9 @@ export default {
   padding-top: 140px;
 }
 .data-li{
-  width: 42%;
-  margin-left: 6%;
+  /* width: 42%; */
+  width: 26%;
+  margin-left: 3%;
   height: 66px;
   float: left;
 }
@@ -1553,21 +1595,22 @@ export default {
 .botm-cont{
   /* width: 58%;
   min-width: 1130px; */
-  width: 1130px;
+  /* width: 1130px; */
+  width: 996px;
   margin: 0 auto;
   flex-grow: 1;
 }
 /* 流程 */
 .process{
   width: 460px;
-  height: 34px;
+  height: 30px;
   text-align: center;
-  margin: 55px auto 0;
+  margin: 52px auto 0;
 }
 .process-star{
   float: left;
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   padding:4px;
   background: url('assets/images/will.png')no-repeat center center;
   background-size: 30px;
@@ -1583,7 +1626,7 @@ export default {
 .process-line{
   float: left;
   margin-top: 18px;
-  width: 100px;
+  width: 108px;
   height: 2px;
   background-color: rgba(255, 255, 255, 0.4)
 }
@@ -1630,8 +1673,9 @@ export default {
   left:21%;
   right:21%;
   bottom:0;
-  width: 1130px;
-  height: 182px;
+  /* width: 1130px; */
+  width: 996px;
+  height: 162px;
   margin: 10px auto 0;
   overflow: hidden;
   z-index: 0;
@@ -1645,14 +1689,17 @@ export default {
 } */
 .banner-wrap .swiper-slide{
   margin: 0 5px;
-  width: 266px;
-  height: 182px;
-  opacity: 0.01;
+  width: 238px!important;
+  height: 162px;
+  /* opacity: 0.01; */
 }
 .banner-wrap .img-pic{
   padding:6px 8px;
-  width: 250px;
-  height: 146px;
+  /* width: 250px;
+  height: 146px; */
+  margin: 0 auto;
+  width: 214px;
+  height: 124px;
   background: url('assets/images/img.png')no-repeat center center;
   background-size: 100%;
 }
@@ -1691,7 +1738,7 @@ export default {
 .btm-rgt{
   float: right;
   flex-shrink: 0;
-  width: 20%;
+  width: 24%;
   z-index: 3;
 }
 
