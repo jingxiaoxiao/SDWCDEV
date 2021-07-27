@@ -312,7 +312,7 @@
                   <!-- slides -->
                   <swiper-slide v-for="(item, index) in bannerList" :key="index">
                     <div class="img-pic">
-                      <img :src="item.imgUrl" alt="">
+                      <!-- <img :src="item.imgUrl" alt=""> -->
                     </div>
                     <p class="swiper-txt">{{item.time}}-{{index}}</p>
                   </swiper-slide>             
@@ -471,6 +471,10 @@ export default {
         }, {
           id:'005',
           imgUrl: "../assets/images/airport-icon5.png",
+          time:'2021-06-04 16:55:35'
+        }, {
+          id:'006',
+          imgUrl: "../assets/images/airport-icon6.png",
           time:'2021-06-04 16:55:35'
         }
       ],
@@ -1232,7 +1236,7 @@ export default {
     //             }
     //         },
     _this.swiperOption= {
-        slidesPerView:4,
+        slidesPerView:5,
         simulateTouch:true,
         // loop: true,
         observer: true,
@@ -1470,11 +1474,11 @@ export default {
 /* small map */
 .small-map{
   padding:8px;
-  width:401px;
-  height: 260px;
+  width:360px;
+  height: 234px;
   position: fixed;
   /* bottom:260px; */
-  bottom:220px;
+  bottom:196px;
   left: 24px;
   z-index: 2;
   /* background: url('assets/images/bg.png')no-repeat center center rgba(255,255,255,0.1); */
@@ -1485,17 +1489,17 @@ export default {
   cursor: pointer;
   margin:0;
   padding-left: 10px;
-  font-size: 14px;
+  font-size: 12px;
   color:#fff;
   font-weight: bold;
   line-height: 22px;
 }
 .amap{
-  width: 400px;
-  height: 238px;
+  width: 360px;
+  height: 210px;
 }
 .overview-small-map{
-  height:238px;
+  height:210px;
   border-radius: 0 10px 0 10px;
 }
 .video-wrap .amap{
@@ -1522,7 +1526,7 @@ export default {
 .small-map-rgt{
   position: fixed;
   /* bottom:260px; */
-  bottom:220px;
+  bottom:196px;
   left:unset;
   right:24px;
 }
@@ -1548,7 +1552,8 @@ export default {
   z-index: 1;
   width: 100%;
   /* height: 334px; */
-  height: 300px;
+  /* height: 300px; */
+  height: 276px;
   background: url('assets/images/bottom.png') no-repeat center top;
   background-size: cover
 }
@@ -1563,7 +1568,7 @@ export default {
   text-align: right;
 }
 .data{
-  padding-top: 140px;
+  padding-top: 134px;
 }
 .data-li{
   /* width: 42%; */
@@ -1675,7 +1680,7 @@ export default {
   bottom:0;
   /* width: 1130px; */
   width: 996px;
-  height: 162px;
+  height: 138px;
   margin: 10px auto 0;
   overflow: hidden;
   z-index: 0;
@@ -1689,8 +1694,8 @@ export default {
 } */
 .banner-wrap .swiper-slide{
   margin: 0 5px;
-  width: 238px!important;
-  height: 162px;
+  width: 190px!important;
+  height: 128px;
   /* opacity: 0.01; */
 }
 .banner-wrap .img-pic{
@@ -1698,8 +1703,10 @@ export default {
   /* width: 250px;
   height: 146px; */
   margin: 0 auto;
-  width: 214px;
-  height: 124px;
+  /* width: 214px;
+  height: 124px; */
+  width: 170px;
+  height: 99px;
   background: url('assets/images/img.png')no-repeat center center;
   background-size: 100%;
 }

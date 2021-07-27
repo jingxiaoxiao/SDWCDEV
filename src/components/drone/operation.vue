@@ -66,11 +66,11 @@
     <!-- 拍照 -->
     <div class="btm-btn">
       <div class="btm-btn-item btm-btn-over"  v-if="availableActions.length==0">无视频</div>
-      <div class="btm-btn-item"  v-for="a of availableActions" :key="a.method" @click="handleAction(a.method)">{{a.label || a.method}}</div>    
+      <div class="btm-btn-item"  v-for="a of availableActions" :key="a.method" @click="handleAction(a.method)">{{a.label || a.method}}</div>
     </div>
 
-    <!-- -->
-    <template  v-if="streamAvailable">
+    <!--  v-if="streamAvailable" -->
+    <template v-if="streamAvailable">
       <!-- 云台自己 -->
       <div class="center-control">
         <img class="control-poit control-top"  @click="handleGimUp(2)" src="/assets/images/Polygon1.png" alt="">
@@ -802,51 +802,54 @@ export default {
 
 .center-control{
   margin-top:100px;
-  padding:79px;
-  width: 57px;
-  height:57px;
+  padding: 66px;
+  width: 48px;
+  height: 48px;
   position:relative;
   float:left;
 }
 .control-ok{
-  width: 57px;
-  height:56px;
+  width: 48px;
+  height:47px;
   cursor: pointer;
 }
 .control-poit{
   position: absolute;
-  width:60px;
-  height:60px;
+  width:50px;
+  height:50px;
   z-index:2;
   cursor: pointer;
 }
 .control-top{
   left:50%;
   top:20px;
-  margin-left:-30px;
+  margin-left:-25px;
 }
 .control-bottom{
   left:50%;
   bottom:20px;
-  margin-left:-30px;
+  margin-left:-25px;
 }
 .control-left{
   left:20px;
   top:50%;
-  margin-top:-30px;
+  margin-top:-25px;
 }
 .control-right{
   right:20px;
   top:50%;
-  margin-top:-30px;
+  margin-top:-25px;
 }
 /* 拍照 */
 .btm-btn{
-  margin-top:120px;
+  margin-top:124px;
   float: right;
-  margin-right:20px;
+  margin-right:10px;
+  width: 222px;
 }
 .btm-btn-item{
+  float: left;
+  margin-right: 10px;
   cursor: pointer;
   margin-top:8px;
   width: 101px;

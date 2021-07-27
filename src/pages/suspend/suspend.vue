@@ -37,7 +37,7 @@
           <!-- <p class="uav-start"  @click="handleExecute" >立即起飞</p> -->
           <p class="uav-start" v-if="!isRunning"  @click="handleExecute(1)" >立即起飞</p>
           <p class="uav-start" v-else  @click="handleExecute(0)" >立即停飞</p>
-          <!-- <p class="uav-start"  @click="ces" >测试跳转页面</p> -->
+          <p class="uav-start"  @click="ces" >测试跳转页面</p>
        
           <p class="item-time">
             <!-- {{hour}}:{{min}}:{{second}} -->
