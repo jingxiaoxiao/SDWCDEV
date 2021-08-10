@@ -63,7 +63,6 @@ export default {
   computed: {
     points() {
       let i = 0;
-      console.log('视频-csid-start', this.node)
       const nodeId = this.node.info.id;
       return this.node.info.points.map(point => {
         const { id, point_type_name } = point;

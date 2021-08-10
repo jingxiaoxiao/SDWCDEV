@@ -27,18 +27,11 @@ import 'chartist';
 import 'chartist-plugin-tooltips';
 import JSONTreeView from 'vue-json-tree-view/src/index';
 
-// video
-import VideoPlayer from 'vue-video-player'
-import 'vue-video-player/src/custom-theme.css'
-import 'video.js/dist/video-js.css'
-
 // swiper
 import VueAwesomeSwiper from 'vue-awesome-swiper'
 import 'swiper/swiper-bundle.css'
 
 Vue.use(JSONTreeView);
-
-Vue.use(VideoPlayer)
 
 Vue.use(VueAwesomeSwiper)
 

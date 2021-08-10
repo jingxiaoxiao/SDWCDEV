@@ -17,7 +17,6 @@
         >
           <span v-t="'plan.view.stop'"></span>
         </el-button>
-        
         <el-button v-else type="danger" size="medium" icon="el-icon-refresh" @click="handleRun">
           <span v-t="'plan.view.run'"></span>
         </el-button>
@@ -49,7 +48,7 @@
           <span slot="header" v-t="'plan.view.raw_data'"></span>
           <template v-slot="{ row }">
             <template v-for="(blobId, name) of row.files">
-              <el-button :key="name" size="mini" @click="handleOpenFile(blobId)">{{ name }}-{{blobId}}</el-button>
+              <el-button :key="name" size="mini" @click="handleOpenFile(blobId)">{{ name }}</el-button>
             </template>
           </template>
         </el-table-column>
@@ -134,9 +133,6 @@ export default {
     jobsToShow() {
       const { size, current } = this.pagination;
       const end = current * size;
-      // alert('pagination是:'+ this.pagination)
-      // alert('end是:'+ end)
-      console.log('历史任务列表',this.jobs.slice(end - size, end))
       return this.jobs.slice(end - size, end);
     }
   },
@@ -183,7 +179,6 @@ export default {
     },
     async getPlanJobs() {
       this.job.loading = true;
-      console.log('这是什么拿---', this.plan)
       const res = await getPlanJobs(this.plan.id);
       if (this.isRunning) {
         this.patchRunningJob(res, this.runningContent.job);
@@ -205,7 +200,7 @@ export default {
         const now = new Date();
         jobs.unshift(Object.assign({
           temporary: true,
-          id: runningJob.job_id,
+          job_id: runningJob.job_id,
           plan_id: this.plan.id,
           created_at: now,
           updated_at: now

@@ -164,6 +164,8 @@ export default {
   },
   status: {
     disconnected: '当前节点未连接',
+    parameters: '节点设置',
+    set_param_failed: '参数设置失败：{message} 错误代码 {code}',
     log: '日志',
     no_log: '暂无日志',
     popup: '弹出',
@@ -194,8 +196,10 @@ export default {
     control: {
       title: '控制',
       empty: '暂无可用控制',
-      gimbal: '云台',
-      zoom: '变焦',
+      click: '信息探针',
+      target: '指点朝向',
+      gimbal: '云台角度',
+      zoom: '变焦倍率',
       stick: '虚拟摇杆'
     },
     action: {

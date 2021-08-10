@@ -46,14 +46,10 @@ export default {
         hour12: false
       };
       if (time >= 3600) options.hour = 'numeric';
-      console.log('飞行使劲啊');
-      
       return new Date(time * 1000).toLocaleString('en-US', options);
     },
     items() {
       const s = this.msg.drone_status;
-      
-      console.log('无人机状态-1：',s);
       return [
         {
           icon: 'drone',

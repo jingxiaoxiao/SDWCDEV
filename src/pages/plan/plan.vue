@@ -25,7 +25,6 @@ export default {
       logs: state => state.plan.log
     }),
     plan() {
-      console.log('这是什么呢呃呃', this.id)
       return this.plans.find(p => p.id === this.id);
     },
     key() {

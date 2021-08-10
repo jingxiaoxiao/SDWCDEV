@@ -164,6 +164,8 @@ export default {
   },
   status: {
     disconnected: 'Node Disconnected',
+    parameters: 'Node Parameters',
+    set_param_failed: 'Failed to set parameter: {message} Error Code: {code}',
     log: 'Log',
     no_log: 'No log',
     popup: 'Popup',
@@ -186,7 +188,7 @@ export default {
       title: 'Video Source',
       empty: 'No video sources available',
       visual: 'Visible Light',
-      thermal: 'Infrared ray',
+      thermal: 'Infrared Ray',
       msx: 'Fusion',
       reload: 'Reload Video',
       reconnect: 'Reconnect'
@@ -194,8 +196,10 @@ export default {
     control: {
       title: 'Control',
       empty: 'No controls available',
-      gimbal: 'Gimbal',
-      zoom: 'Zoom',
+      click: 'Info Probe',
+      target: 'Point Towards',
+      gimbal: 'Gimbal Angle',
+      zoom: 'Camera Zoom',
       stick: 'Virtual Joystick'
     },
     action: {

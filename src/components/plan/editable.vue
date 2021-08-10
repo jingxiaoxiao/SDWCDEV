@@ -18,11 +18,6 @@
         :min="0" 
         :max="24" 
       ></el-input>
-      <!-- <el-input-number 
-        v-model="plan.description" 
-        :min="1" 
-        :max="24" 
-        ></el-input-number> -->
     </el-form-item>
     <el-form-item>
       <span slot="label" v-t="'plan.air'"></span>

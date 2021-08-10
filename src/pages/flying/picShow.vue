@@ -64,7 +64,7 @@ export default {
   },
   created() {
     
-    console.log('幼稚吗', this.list);
+    console.log('有值吗', this.list);
     
     if (this.imgShow) {
       this.show = this.imgShow

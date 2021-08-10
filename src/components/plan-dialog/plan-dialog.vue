@@ -5,7 +5,6 @@
     custom-class="sd-plan-dialog"
     :title="form.name"
     :visible.sync="visible"
-   
   >
     <el-alert
       v-if="form.message"
@@ -50,8 +49,6 @@ export default {
   computed: {
     form() {
       const d = this.$store.state.plan.dialog.find(d => d.id === this.planId) || {};
-      // alert('dd'+ d)
-      // console.log('dd', d)
       this.$emit('changeForm', d)
       return d.dialog || {};
     },

@@ -1,9 +1,7 @@
 <template>
   <div class="status__line status__notify">
-    
     <div class="status__label" v-t="'status.log'"></div>
     <div class="status__body">
-      
       <sd-status-notify-item v-if="notification.length > 0" :notification="notification[0]"></sd-status-notify-item>
       <span v-else v-t="'status.no_log'"></span>
     </div>

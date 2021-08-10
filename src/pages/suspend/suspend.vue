@@ -21,7 +21,6 @@
       <div class="time-cont">
         
         <span class="time-date">{{currentTime}} 星期{{ (parseTime(currentDate,'{y}-{m}-{d} {h}:{i}:{s} 星期{a}')).split('星期')[1] }}</span>
-        <!-- <img class="weather-icon" src="/assets/images/icon_sun.png"> -->
         <span class="weather-icon-txt">{{weather.text}}</span>
       </div>
     </div>
@@ -32,16 +31,37 @@
         <div>
           
         <div class="suspend-item suspend-item2">
-          <p class="item-title">距离下次巡检</p>
-          <!-- v-if="isRunning" -->
-          <!-- <p class="uav-start"  @click="handleExecute" >立即起飞</p> -->
-          <p class="uav-start" v-if="!isRunning"  @click="handleExecute(1)" >立即起飞</p>
-          <p class="uav-start" v-else  @click="handleExecute(0)" >立即停飞</p>
+          <template v-if="countIsZoreShow">
+            <p class="item-title">距离下次巡检</p>
+          </template>
+          <template v-else>
+            <p class="item-title"></p>
+          </template>
+          
+          <!-- flyOver为true不能点击，flyOver为false可以点击 -->
+          <!-- <p class="uav-start" v-if="!isRunning"  @click="handleExecute(1)" >立即起飞</p> -->
+          <template v-if="!isRunning">
+            <template v-if="!flyOver">
+               <p class="uav-start"  @click="handleExecute(1)" >立即起飞</p>
+            </template>
+            <template v-else>
+              <p class="uav-start uav-start-no"  >立即起飞</p>
+            </template>
+          </template>
+           <template v-else>
+              <p class="uav-start uav-start-stop" @click="handleExecute(0)" >立即停飞</p>
+           </template>
+
+          <!-- <p class="uav-start"  @click="goFlyPage" >飞行页面</p> -->
           <p class="uav-start"  @click="ces" >测试跳转页面</p>
        
-          <p class="item-time">
+          <p class="item-time"  v-if="countIsZoreShow">
             <!-- {{hour}}:{{min}}:{{second}} -->
             {{countSecond}}
+          </p>
+          <p class="item-plan-mm" v-else>
+            <span>{{nextInspection}}:</span>
+            <em>{{nextInspectionTime}}</em>
           </p>
           <div class="item-lists clearfix">
             <div class="item-list" v-for="(list, index) in inspectList" :key="index">
@@ -78,6 +98,8 @@
               :data="taskData"
               height="250"
               stripe
+              highlight-current-row
+              @row-click="handlerTask"
               style="width: 100%">
               <el-table-column
                 prop="name"
@@ -87,43 +109,16 @@
                 prop="droneName"
                 label="执飞无人机">
               </el-table-column>
-              
-              <!-- <el-table-column
-                prop="createTime"
-                label="创建时间">
-              </el-table-column> -->
               <el-table-column
                 prop="description"
                 label="执行时间">
               </el-table-column>
-               <!-- <el-table-column
-                label="任务"
-                width="100">
-                <template slot-scope="scope">
-                  <el-tooltip class="item" effect="dark" :content="scope.row.task" placement="left-start">
-                    <p class="task-name">{{scope.row.task}}</p>
-                  </el-tooltip>
-                </template>
-              </el-table-column>
-              <el-table-column
-                prop="startFly"
-                label="起飞">
-              </el-table-column>
-              <el-table-column
-                prop="backFly"
-                label="返航">
-              </el-table-column> -->
               <el-table-column
                 label="飞行进度">
                 <template slot-scope="scope">
                   <el-progress :text-inside="true" :stroke-width="10" :percentage="scope.row.flyProcess"></el-progress>
                 </template>
               </el-table-column>
-              <!-- <el-table-column label="操作" width="100">
-                <template slot-scope="scope">
-                  <el-button type="text" size="small" icon="el-icon-edit" @click="handleExecute(scope.row)">执行任务</el-button>
-                </template>
-              </el-table-column> -->
             </el-table>
             <!-- <el-pagination
               small
@@ -164,37 +159,13 @@
           <!-- 底部 -->
           <div class="suspend-bottom">
             <div class="suspend-bottom-con">
-              <div class="suspend-bottom-left">
-                <div class="suspend-btm-title">
-                  <img class="suspend-btm-tit-icon" src="/assets/images/icon_camera_line.png">
-                  <span class="suspend-btm-tit">机场监控设备</span>
-                </div>
-                <div class="suspend-btm-small-video">
-                  <!-- <video-player class="video-player vjs-custom-skin"
-                  ref="videoPlayer"
-                  :playsinline="true"
-                  style="object-fit:fill"
-                  :options="playerOptions2"
-                  :x5-video-player-fullscreen="true"
-                  @pause="onPlayerPause($event)"
-                  @play="onPlayerPlay($event)"
-                  @fullscreenchange="onFullscreenChange($event)"
-                  @click="fullScreen" /> -->
-                  <template v-for="{ point, compo, key } of points">
-                    <component
-                      :is="compo"
-                      :key="key"
-                      :info="nodeObj.info"
-                      :point="point"
-                      :status="nodeObj.status"
-                      :msg="nodeObj.msg"
-                    ></component>
-                  </template>
-                </div>
-              </div>
+            
               <div class="suspend-bottom-mid">
                 <div class="airport-wrap">
-                  <p class="airport-wrap-title">机场信息</p>
+                  <div class="suspend-btm-title">
+                  <span class="suspend-btm-tit">机场信息</span>
+                </div>
+                  <!-- <p class="airport-wrap-title">机场信息</p> -->
                   <div class="airport-wrap-con">
                     <div class="airport-left">
                       <div class="airport-left-li">
@@ -299,12 +270,11 @@
       </div>
     </div>
     
-    <!--  -->
-    <sd-plan-dialog ref="planDialog" :planId="planId"  @changeForm="getForm"></sd-plan-dialog>
+    
     
     <!--  -->
-    <div class="dialog-black" v-show="dialogShow" @click="handleFlyBlock"></div>
-    <div class="dialog-main" v-show="dialogShow">
+    <div class="dialog-black" v-show="dialogShow" @click="handleFlyBlock" v-cloak></div>
+    <div class="dialog-main" v-show="dialogShow" v-cloak>
       <h4 class="dialog-fly-name">青南{{flyPlan.droneName}}巡检无人机</h4>
       <img class="dialog-fly-drone-pic" src="/assets/images/drone-pic.png">
       <template v-if="loadingData">
@@ -353,6 +323,9 @@
       </div>
       </template>
     </div>
+
+    <!--  -->
+    <sd-plan-dialog ref="planDialog" :planId="planId"  @changeForm="getForm"></sd-plan-dialog>
 
   </div>
 </template>
@@ -488,11 +461,11 @@ export default {
           area:'机场',
           statusList:[
             {
-              statusIcon:'/assets/images/sl-img01.png',
+              statusIcon:'/assets/images/sl-img07.png',
               statusName:'舱门',
             },
             {
-              statusIcon:'/assets/images/sl-img02.png',
+              statusIcon:'/assets/images/sl-img06.png',
               statusName:'固定器',
             },
             {
@@ -513,15 +486,15 @@ export default {
               statusName:'关机',
             },
             {
-              statusIcon:'/assets/images/sl-img06.png',
+              statusIcon:'/assets/images/sl-img01.png',
               statusName:'飞控',
             },
             {
-              statusIcon:'/assets/images/sl-img01.png',
+              statusIcon:'/assets/images/sl-img02.png',
               statusName:'电源充足',
             },
             {
-               statusIcon:'/assets/images/sl-img07.png',
+               statusIcon:'/assets/images/sl-img06.png',
               statusName:'吊舱'
             }
           ]
@@ -564,7 +537,15 @@ export default {
       flyStatus:0,
       // 飞行中的id
       flyId:undefined,
-      planId:0
+      planId:0,
+      // 是否是倒计时
+      countIsZoreShow: true,
+      // 距离下次巡检
+      nextInspection:'距离下次巡检',
+      // 当前预计执行时间
+      nextInspectionTime:'',
+      // 倒计时是否完成
+      countOver:false
 
     }
   },
@@ -677,7 +658,26 @@ export default {
     },
     // 机场-markers
     markers() {
-      return [...this.depotMarkers];
+      console.log('点点点MMM',this.depotMarkers);
+      let markerList = this.depotMarkers;
+      markerList.map(item => {
+        if(item.name == "Depot"){
+          item.name = "莱87采油厂"
+        }
+      })
+      // markers.push(
+      //   {
+      //     type: 'depot',
+      //     id: d.info.id,
+      //     name: d.info.name,
+      //     position: {
+      //       lng: +status.lng,
+      //       lat: +status.lat,
+      //     }
+      //   }
+      // )
+
+      return [...markerList];
     },
     // 
     isRunning() {
@@ -699,6 +699,23 @@ export default {
         return { point, compo, key };
       }).sort((a, b) => CompoOrder[a.compo] - CompoOrder[b.compo]);
     },
+    flyOver(){
+      let statusFly = false
+      for (let d of this.drones) {
+        if(d.msg.notification.length > 0 ){
+          // 开始起飞
+          if(d.msg.notification[0].msg == "开始起飞"){
+            statusFly = true
+          }
+          // 任务执行完成
+          if(d.msg.notification[0].msg == "任务执行完成"){
+             statusFly = false
+          }
+        };
+      }
+      return statusFly
+    }
+    
 
   },
   watch: {
@@ -711,7 +728,11 @@ export default {
           if(djs[1]=='00'){
             if(djs[2]=='00'){
             this.handleExecute(1)
+            this.countOver = true
             // this.ces()
+            // this.getIndexPlan()
+            // this.ccss()
+            
            }
           }
         }
@@ -720,7 +741,16 @@ export default {
         //oldValue  改变前的数据
       }
       //,deep: true
-    }
+    },
+    // endDate:{
+    //   handler(newValue,oldValue) {
+    //     // 监听倒计时
+    //     this.countTime()
+    //     this.getIndexPlan()
+    //     this.ccss()
+        
+    //   }
+    // }
   },
   created() {
     var _this = this; //声明一个变量指向Vue实例this，保证作用域一致
@@ -739,17 +769,21 @@ export default {
         _this.appendZero(new Date().getSeconds());
     }, 1000);
 
+    // if(this.$route.query.isSuspend == 0){
+      this.allItem = []
+      this.weatherItem = []
+      this.flyItem = []
+    // }
+
     console.log('飞行页面传回的planid是',this.$route.query);
     this.flyStatus = this.$route.query.flyStatus
     this.flyId = Number(this.$route.query.planId)
     console.log('飞行页面传回的',this.flyId);
     
+    
     this.setPreference({ mapType });
   },
   mounted () {
-    // this.countTime()
-    
-    
 
     this.getIndexPlan()
     // 
@@ -846,6 +880,28 @@ export default {
 
      
     },
+    // countIsZoreShow
+    handlerTask(row, event, column){
+      console.log('点击当前行任务',row);
+      this.flyPlan = row
+      console.log('倒计时测试-要执行的任务222',this.flyPlan);
+      
+      this.planId = this.flyPlan.id
+      if(row.countIsZore == 0){
+        this.countIsZoreShow = false
+        this.nextInspection = row.name + '计划执行时间'
+        let mm = row.description
+        if(mm == ''){
+          return
+        } else{
+          let mmArr = mm.split('.')
+          this.nextInspectionTime = mmArr[0] + ':' + mmArr[1]
+        }
+        
+      } else{
+        this.countIsZoreShow = true
+      }
+    },
     // 任务执行历史plans总和
     async getPlanJobs(planId) {
       let res = await getPlanJobs(planId)
@@ -877,6 +933,10 @@ export default {
       {
         case 'error':
           this.equipLIstanbul[0].statusList[2].statusName ='充电器异常';
+          console.log('充电器异常MM',this.selectedNodeDepot.msg);
+          console.log('充电器异常MM2',this.selectedNodeDrons.msg);
+          
+          
           break;
         default:
           this.equipLIstanbul[0].statusList[2].statusName ='充电器正常';
@@ -911,11 +971,12 @@ export default {
           this.equipLIstanbul[1].statusList[0].statusName ='开机';
           break;
       }
-      if(this.selectedNodeDrons.msg.battery.remain > 90){
-        this.equipLIstanbul[1].statusList[1].statusName ='电量充足';
-      } else{
-        this.equipLIstanbul[1].statusList[1].statusName ='电量不足';
-      }
+      // if(this.selectedNodeDrons.msg.battery.remain > 90){
+      //   this.equipLIstanbul[1].statusList[1].statusName ='电量充足';
+      // } else{
+      //   this.equipLIstanbul[1].statusList[1].statusName ='电量不足';
+      // }
+      this.equipLIstanbul[1].statusList[1].statusName ='电量'+this.selectedNodeDrons.msg.battery.remain +'%';
       
       this.equipLIstanbul[1].statusList[2].statusName ='信号' + this.selectedNodeDrons.msg.drone_status.signal ;
       // this.equipLIstanbul[1].statusList[3].statusName ='卫星'  + this.selectedNodeDepot.msg.drone_status.gps.satcount + '星' + this.selectedNodeDepot.msg.drone_status.gps.type ;
@@ -986,41 +1047,46 @@ export default {
     },
     // 获取执行任务
     gtOnTask(dataList){
-      
+       this.onTask = []
       // 加进度参数
       dataList.forEach(itm => {
         itm.flyProcess = 0
       })
 
       // 当前时间=>秒
+      // let execteTime = this.parseTime(this.currentDate,'{h}:{i}:{s}')
       let execteTime = this.parseTime(this.currentDate,'{h}:{i}:{s}')
       var execteArr = execteTime.toString().split(':');
       let currentSecond = this.removeZero(execteArr[0])*3600 + this.removeZero(execteArr[1])*60 + this.removeZero(execteArr[2])
+      console.log('当前时间秒数是：', currentSecond);
+      
 
       // 倒计时任务的index
       let index = 0
       // 将要执行的任务
       dataList.forEach((item, ind)=> {
         item.flyProcess = 100
+        item.countIsZore = 0
         // 描述中的飞行时间
         if(item.description !== 0){
           // 执行到几点=>秒
           let doArr = (item.description).toString().split('.')
           let doSecond = this.removeZero(doArr[0])*3600 +  this.removeZero(doArr[1])*60
+          console.log('列表规定秒数是;', doSecond);
           
           // TODO 首先判断是否有正在执行的任务
           // 无执行状态
-
-            console.log('ddd',this.flyId);
-            console.log('ddd2',item.id);
+         
           if(this.flyId == item.id){
             if(this.flyStatus == '4'){
-              console.log('有flyId且等于4-1');
+              // console.log('有flyId且等于4-1');
                item.flyProcess = 100
             }else{
               if((doSecond > currentSecond) && (this.onTask.length == 0)) {
-                console.log('有flyId且不等于4-2', this.flyStatus);
+                // console.log('有flyId且不等于4-2', this.flyStatus);
+                console.log('测试进入了吗1',item);
                 index = ind
+                item.countIsZore = 1
                 this.onTask.push(item)
                 return false;
               }
@@ -1028,34 +1094,14 @@ export default {
            
           }else{
             if((doSecond > currentSecond) && (this.onTask.length == 0)) {
+              console.log('测试进入了吗2',item);
               
-            console.log('mei有等于flyId');
               index = ind
+              item.countIsZore = 1
               this.onTask.push(item)
               return false;
             }
           }
-          // 获取要执行的任务
-          // if((doSecond > currentSecond) && (this.onTask.length == 0)) {
-          //   console.log('测试1', item);
-          //   console.log('测试2', this.flyId);
-          //   if(this.flyId == item.id){
-          //     console.log('有flyId-1', this.flyId);
-          //     if(this.flyStatus !== '4'){
-          //       console.log('有flyId且不等于4-2', this.flyStatus);
-          //       index = ind
-          //       this.onTask.push(item)
-          //     }
-          //     console.log('有flyId且等于4-3', this.flyStatus);
-          //     return false;
-          //   } else {
-          //     console.log('没有flyId', ind);
-          //     index = ind
-          //     this.onTask.push(item)
-          //     return false;
-          //   }
-            
-          // }
           
         }
         
@@ -1063,6 +1109,8 @@ export default {
       
       // 要执行的任务==this.flyPlan
       this.flyPlan = this.onTask[0]
+      console.log('倒计时测试-要执行的任务',this.flyPlan);
+      
       this.planId = this.flyPlan.id
       let endArr = (this.onTask[0].description).toString().split('.')
       let endSecond = this.removeZero(endArr[0])*3600 +  this.removeZero(endArr[1])*60
@@ -1071,6 +1119,9 @@ export default {
       this.endDate = this.parseTime(this.currentDate,'{y}-{m}-{d}') +' '+ endArr[0].toString() + ':' + endArr[1].toString() + ':00' 
       // 若未点击执行任务,则结束日期即倒计时到达日期为下达任务时间
       this.$store.commit(EXE.SET_EXECUTE, this.endDate)
+
+      console.log('倒计时测试-结束时间',this.endDate);
+      
 
       // 返航时间
       let hmsSecond = endSecond -(2*60)
@@ -1082,7 +1133,8 @@ export default {
       
       // 所有任务dataList
       dataList.forEach((itmm, indd) => {
-          console.log('当前任务为：',itmm);
+          // console.log('当前任务为：',itmm);
+          
         // if(itmm.id == flyId){
           
         // }
@@ -1127,6 +1179,8 @@ export default {
     },
     // 倒计时
     countTime() {
+      // console.log('进入倒计时dddd');
+      
       let now = new Date().getTime(); // 获取当前时间
       let endDate = new Date(this.endDate); // 设置截止时间
       let end = Number(endDate);
@@ -1174,6 +1228,10 @@ export default {
         this.flag = true;
       }
     },
+    ccss(){
+      console.log('执行任务1');
+      
+    },
     // 获取开始执行任务时间
     handleExecute(status) {
       // 点击立即起飞  获取下达任务-日期
@@ -1205,10 +1263,13 @@ export default {
     },
     // 停飞
     handleStop() {
+      // console.log('点击取消飞行');
+      
       this.allItem = []
       this.weatherItem = []
       this.flyItem = []
-      this.$nextTick(() => this.$refs.planDialog.close());
+      // 点击立即停飞后的弹框
+      // this.$nextTick(() => this.$refs.planDialog.close());
       if (!this.isRunning) return;
       /**
        * mutate element-ui's Notification object
@@ -1253,7 +1314,7 @@ export default {
             if(item.dialog.items.length !== 0){
               this.weatherItem = item.dialog.items;
             }
-            console.log('暂停页面-所有天气item:', this.weatherItem)
+            // console.log('暂停页面-所有天气item:', this.weatherItem)
           }
         } 
 
@@ -1278,19 +1339,24 @@ export default {
           // 获取起飞前对象为了获取按钮信息
           this.lastFlyObj = item
           console.log('暂停页面-起飞前的对象', this.lastFlyObj)
+
+
+          if(this.flyItem.length !== 0){
+            // 弹框
+            if(this.isRunning){
+              this.dialogShow = true
+              this.loadingData = false
+            } else{
+              this.dialogShow = false
+              this.loadingData = true
+            }
+          }
+
+
         }
       }
 
-      if(this.flyItem.length !== 0){
-        // 弹框
-        if(this.isRunning){
-          this.dialogShow = true
-          this.loadingData = false
-        } else{
-          this.dialogShow = false
-          this.loadingData = true
-        }
-      }
+      
       
     },
     handleFlyBlock(){
@@ -1298,11 +1364,17 @@ export default {
     },
     handleFlyCancel(){
       this.dialogShow = false
+      this.currentDate = new Date()
+      if(this.countOver){
+        this.getIndexPlan()
+        this.countOver = false
+      }
+      
       let message = this.lastFlyObj.dialog.buttons[0].message
       MqttClient.mqtt.publish(`plans/${this.flyPlan.id}/term`, message);
     },
     handleFlySure(){
-      this.startTime = this.parseTime((new Date()),'{y}-{m}-{d} {h}:{i}:{s}')
+      this.dialogShow = false
 
       // 开始飞行
       let message = this.lastFlyObj.dialog.buttons[1].message
@@ -1312,11 +1384,18 @@ export default {
       // let message = this.lastFlyObj.dialog.buttons[0].message
       // MqttClient.mqtt.publish(`plans/${this.flyPlan.id}/term`, message);
 
-      // 2021-07-18新增---start   planFlyDuration
+      // 跳转页面
+      this.goFlyPage()
+      
+      
+    },
+    goFlyPage(){
+      this.startTime = this.parseTime((new Date()),'{y}-{m}-{d} {h}:{i}:{s}')
       // 获取当前起飞时间（时分秒）转换成秒
       let sStart = this.parseTime((new Date()),'{h}:{i}:{s}')
       let sStartArr = sStart.toString().split(':')
       let sStartSecond = this.removeZero(sStartArr[0])*3600 +  this.removeZero(sStartArr[1])*60 +this.removeZero(sStartArr[2]) 
+      
       // this.planFlyDuration = '4.12min'
       if(this.planFlyDuration != undefined){
          // 获取预计时间的数字
@@ -1332,9 +1411,7 @@ export default {
         let hmsSecond = allPlanSecond -(2*60)
         this.landTime = this.parseTime((new Date()),'{y}-{m}-{d}') + ' ' + this.formatSeconds(hmsSecond)
       }
-     // 2021-07-18新增---end   planFlyDuration
 
-    
       if(this.endDate != '' || this.endDate != null){
         if(this.landTime != '' || this.landTime != null){
           // let timeObj = {
@@ -1352,8 +1429,6 @@ export default {
           });
         }
       }
-      
-      this.dialogShow = false
     },
     // 测试页面跳转
     // TODO delete
@@ -1363,29 +1438,10 @@ export default {
       // 下达任务时间 execteTime
       this.$store.commit(EXE.SET_EXECUTE, execteTime)
 
-      // this.$router.push({ name: 'flying' });
       this.startTime = this.parseTime((new Date()),'{y}-{m}-{d} {h}:{i}:{s}')
-
-      
 
       if(this.endDate != '' || this.endDate != null){
         if(this.landTime != '' || this.landTime != null){
-          // let timeObj = {
-          //   starTime:this.startTime,
-          //   flyDuration:this.endDate, 
-          //   landTime:this.landTime
-          // }
-          // let timeObj = {
-          //   starTime:"2021-05-16 08:55:25",
-          //   flyDuration:"2021-05-16 08:56:25", 
-          //   landTime:"2021-05-16 08:57:25"
-          // }
-          // this.$http.jsonp("https://api.douban.com//v2/movie/top250")
-          //   .then(function (reponse) {
-          // })
-          // res.writeHead(200,{'content-Type':'text/plain',"Access-Control-Allow-Origin":"*"});
-          // this.$router.push({ name: 'flying',  params: { planId: this.flyPlan.id, starTime:this.startTime, flyDuration:this.endDate, landTime:this.landTime } });
-         
 
           this.$router.push({
             path: "/flying",
@@ -1403,7 +1459,8 @@ export default {
       } else {
         return obj;
       }
-    },
+    }
+    // 
 
   },
   beforeDestroy() {
@@ -1417,6 +1474,9 @@ export default {
 
 
 <style>
+[v-cloak]{
+    display: none;
+}
 .overview-map {
   margin: 0;
   /* height: 996px; */
@@ -1542,13 +1602,15 @@ export default {
 }
 .suspend-item2{
   /* height:336px; */
-  height:286px;
+  /* height:286px; */
+  height:324px;
   background:url('assets/images/s-l-bg1.png')no-repeat center top;
   /* background-size:cover; */
   background-size:100% 100%;
 }
 .item-title{
   margin:0;
+  height: 21px;
   padding-bottom: 5px;
   padding-left:20px;
   font-size:16px;
@@ -1561,7 +1623,7 @@ export default {
 .uav-start{
   cursor: pointer;
   float: right;
-  margin:4px 0 0;
+  margin:4px 0 0 8px;
   width:101px;
   height:33px;
   text-align: center;
@@ -1571,6 +1633,35 @@ export default {
   font-size: 14px;
   color:#fff;
   text-shadow: 0 0 14px #4AD4FF;
+}
+.uav-start-stop{
+  background:url('assets/images/btn-1.png')no-repeat center center;
+}
+.uav-start-no{
+  opacity: 0.6;
+}
+.item-plan-mm{
+  margin-top:40px;
+  height: 99px;
+  /* display: flex;
+  align-items: center;
+  justify-content: center; */
+  color:#fff;
+}
+.item-plan-mm span{
+  display: block;
+  text-align: center;
+  font-size: 22px;
+  color:rgba(255,255,255,0.8);
+}
+.item-plan-mm em{
+  display: block;
+  text-align: center;
+  font-style: normal;
+  font-size: 40px;
+  color:#fff;
+  text-shadow: 0 0 14px #4AD4FF;
+  margin-top: 10px;
 }
 .item-time{
   /* font-size:100px; */
@@ -1696,6 +1787,12 @@ export default {
 .el-table--striped .el-table__body tr.el-table__row:hover td{
    background: rgba(90,146,255,0.2);
 }
+.el-table tr.current-row{
+  background: #31fbcc4a;
+}
+.el-table .el-table__body .current-row td,.el-table--striped .el-table__body tr.el-table__row--striped.current-row td{
+  background: #31fbcc4a;
+}
 
 /* 样式 */
 .task-table .el-table--scrollable-y .el-table__body-wrapper::-webkit-scrollbar {width: 12px;}
@@ -1767,7 +1864,8 @@ export default {
 }
 .suspend-bottom-mid{
   flex-grow:1;
-  padding-top:32px;
+  /* padding-top:32px; */
+  padding-left: 15px;
 }
 .suspend-bottom-right{
   flex-shrink: 0;
@@ -1788,7 +1886,7 @@ export default {
   height:24px;
 }
 .suspend-btm-tit{
-  font-size:14px;
+  font-size:15px;
   color:#fff;
   padding-left:4px;
 }
@@ -1801,7 +1899,7 @@ export default {
 .airport-wrap{
   margin:0 5px;
   height:100%;
-  border-left:1px solid #fff;
+  /* border-left:1px solid #fff; */
   border-right:1px solid #fff;
   border-image: -webkit-linear-gradient(-180deg, rgba(255,255,255,0.00) 0%,#00BBF2 60%, rgba(255,255,255,0.00) 99%) 2 2 2 2;
   border-image: -moz-linear-gradient(-180deg, rgba(255,255,255,0.00) 0%,#00BBF2 60%, rgba(255,255,255,0.00) 99%) 2 2 2 2;
@@ -1821,11 +1919,12 @@ export default {
 .airport-left{
   width:186px;
   flex-shrink: 0;
+  margin-top:10px;
 }
 .airport-right{
   flex-grow:1;
-  padding-top: 40px;
-  padding-left: 15px;
+  padding-top: 50px;
+  padding-left: 110px;
 }
 .airport-left-li{
   display:flex;

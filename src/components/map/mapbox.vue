@@ -150,7 +150,7 @@ export default {
       const map = new Map({
         container: this.$refs.map,
         style: GoogleRasterStyle,
-        maxZoom: 19,
+        maxZoom: 18,
         zoom: __MAPBOX_ZOOM__ || 0.5,
         center: __MAPBOX_CENTER__ || { lat: 27, lng: 162 },
       });

@@ -60,7 +60,8 @@
       >{{ depot.info.name }}</el-menu-item>
     </el-submenu>
 
-    <!-- 页面 -->
+
+  <!-- 页面 -->
     <el-submenu index="sdwc">
       <template #title>
         <sd-icon value="satellite"></sd-icon>

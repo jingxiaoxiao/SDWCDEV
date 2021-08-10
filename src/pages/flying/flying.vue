@@ -1,8 +1,11 @@
 <template>
   <div class="fly-page">
     <!-- 视频、地图切换按钮 -->
-    <div class="uav-start-fly" @click="goSuspend">
+    <!-- <div class="uav-start-fly" @click="goSuspend">
       <span>停飞页面</span>
+    </div> -->
+    <div v-if="isRunning" class="uav-start-fly  uav-start-stop" @click="handleStop">
+      <span>立即停飞</span>
     </div>
     <!-- 地图、视频 大屏幕 -->
     <div class="video-wrap">
@@ -37,6 +40,7 @@
       </template>
       <template v-else>
         <div id="container" ref="basicMapbox" class="amap">
+          <!-- <sd-map class="overview-small-map" v-bind="map"></sd-map> -->
           <sd-map
             icon="map-marker"
             class="overview-small-map"
@@ -56,8 +60,16 @@
         <p class="map-coor"  @click="handleChage">坐标：{{lngLatObj.lng}},{{lngLatObj.lat}}</p>
         <div id="container" ref="basicMapbox" class="amap">
           <!-- DroneMap -->
-          <!-- <sd-map v-bind="map"></sd-map> -->
-            <sd-map
+          <!-- <sd-map class="overview-small-map" v-bind="map"></sd-map> -->
+           <sd-map
+            icon="map-marker"
+            class="overview-small-map"
+            title="map.satellite"
+            :polylines="polylines"
+            :markers="markers"
+            v-bind="map"
+          ></sd-map>
+            <!-- <sd-map
             class="overview-small-map"
             icon="map-marker"
             title="map.satellite"
@@ -73,7 +85,7 @@
                 <span v-t="'map.clear'"></span>ddsd
               </el-button>
            </template>
-          </sd-map>
+          </sd-map> -->
         </div> 
       </template>
       <template v-else>
@@ -379,7 +391,7 @@ import MonitorDepot from '@/components/monitor/video.vue';
 import Monitor from '@/components/drone/video2.vue';
 import Operation from '@/components/drone/operation.vue';
 
-import { getPlanJobs, picBlob } from '@/api/super-dock';
+import { getPlanJobs, picBlob, cancelPlanJob } from '@/api/super-dock';
 import JobFile from '@/components/job-file/job-file.vue';
 
 import { weather, minutely, warning } from '@/api/heweather';
@@ -524,7 +536,9 @@ export default {
       // 图片放大
       picurl:'',
       imgShow:false,
-      currInd:undefined
+      currInd:undefined,
+      // 是否点击立即停飞 （1-未点击，0-点击）
+      isSuspend:1,
 
     }
   },
@@ -856,11 +870,11 @@ export default {
           // 先“返航完成”，后“任务执行完成”
           // TODO不知道哪个时间是定义为降落时间
           // TODO 任务执行完成 时图片下载完毕可以获取图片了
-          if(d.msg.notification[0].msg == "任务执行完成"){
+          if(d.msg.notification[0].msg == "返航完成"){
             
             this.actualDuration = this.timestampToTime(d.msg.notification[0].time) 
             this.flyStatus = 4
-            console.log('无人机模式状态-任务执行完成', this.flyStatus);
+            console.log('无人机模式状态-返航完成', this.flyStatus);
           }
         }
 
@@ -927,34 +941,6 @@ export default {
       return this.plans.find(p => p.id === this.planId);
     },
     
-  },
-  mounted() {
-
-    this.swiper.slideTo(4, 1000, false)
-    
-    // 参数获取
-    this.planId =Number(this.$route.query.planId) 
-    this.starTime = this.$route.query.starTime
-    this.flyDuration = this.$route.query.flyDuration
-    this.landTime = this.$route.query.landTime
-    // this.weatherTxt = this.$route.query.weather
-    this.getWeather()
-    // 订阅测试c'c'c'c 
-    //  this.submm()
-    
-    this.getPlanWaypoints(this.plan).then(wp => {
-      
-      this.map = waypointsToMapProps(wp)
-      console.log('地图',this.map);
-    });
-   
-
-    this.processSatus()
-
-    if(this.planId){
-      // this.handleOpenFile()
-      this.getPlanJobs();
-    }
   },
   methods: {
     fullScreen(){},
@@ -1151,7 +1137,8 @@ export default {
     },
     // 获取具体任务下的图片集合
     async picBlob(fileId) {
-      let res = await picBlob(fileId);
+      let mm = '231'
+      let res = await picBlob(mm);
       console.log('历史图片集合：', res)
     },
     /**
@@ -1221,6 +1208,39 @@ export default {
       this.imgShow = false
     },
 
+     // 停飞
+    handleStop() {
+      // console.log('点击取消飞行');
+      this.isSuspend = 0
+      // 点击立即停飞后的弹框
+      // this.$nextTick(() => this.$refs.planDialog.close());
+      if (!this.isRunning) return;
+      /**
+       * mutate element-ui's Notification object
+       * @see https://github.com/ElemeFE/element/blob/v2.8.2/packages/notification/src/main.vue
+       */
+      // const n = this.$notify({
+      //   offset: 50,
+      //   duration: 0,
+      //   type: 'info',
+      //   title: '测试测试MMM',
+      //   message: this.$t('plan.view.pending'),
+      // });
+      // cancelPlanJob(this.planId, this.runningContent.id).then(() => {
+      //   Object.assign(n.$data, {
+      //     message: this.$t('plan.view.stop_run'),
+      //     type: 'warning',
+      //     duration: 2000
+      //   });
+      //   n.startTimer();
+      // }).catch(e => {
+      //   Object.assign(n.$data, {
+      //     message: this.$t('plan.view.stop_fail', { code: e.status }),
+      //     type: 'error'
+      //   });
+      // });
+    },
+
   },
   created() {
     var _this = this; 
@@ -1276,7 +1296,36 @@ export default {
         _this.appendZero(new Date().getSeconds());
     }, 1000);
 
+    
     this.setPreference({ mapType });
+  },
+  
+  mounted() {
+
+    this.swiper.slideTo(4, 1000, false)
+    
+    // 参数获取
+    this.planId =Number(this.$route.query.planId) 
+    this.starTime = this.$route.query.starTime
+    this.flyDuration = this.$route.query.flyDuration
+    this.landTime = this.$route.query.landTime
+    // this.weatherTxt = this.$route.query.weather
+    this.getWeather()
+    // 订阅测试c'c'c'c 
+    //  this.submm()
+    
+    this.getPlanWaypoints(this.plan).then(wp => {
+      this.map = waypointsToMapProps(wp)
+      console.log('地图MMM',this.map);
+    });
+
+    this.processSatus()
+
+    if(this.planId){
+      // this.handleOpenFile()
+      this.getPlanJobs();
+    }
+
   },
   beforeDestroy() {
     if (this.timer) {
@@ -1311,6 +1360,10 @@ export default {
   color:#fff;
   text-shadow: 0 0 14px #4AD4FF;
   z-index: 12;
+}
+.uav-start-stop{
+  left: 220px;
+  background:url('assets/images/btn-1.png')no-repeat center center;
 }
 .video-wrap{
   width:100%;

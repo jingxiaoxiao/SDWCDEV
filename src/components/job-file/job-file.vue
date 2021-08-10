@@ -62,10 +62,8 @@ export default {
       this.blobId = id;
       this.visible = true;
       this.downloadBlob(id).then(file => {
-        console.log('这里的文件-aa',file)
         this.file = file;
       });
-      console.log('这里的文件', this.file)
     },
     handleClosed() {
       this.file = {
