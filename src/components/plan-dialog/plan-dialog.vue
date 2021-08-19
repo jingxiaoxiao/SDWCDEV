@@ -50,6 +50,8 @@ export default {
     form() {
       const d = this.$store.state.plan.dialog.find(d => d.id === this.planId) || {};
       this.$emit('changeForm', d)
+      console.log('起飞前的弹框内容', d);
+      
       return d.dialog || {};
     },
     alertType() {

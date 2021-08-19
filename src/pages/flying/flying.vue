@@ -1,12 +1,19 @@
 <template>
   <div class="fly-page">
-    <!-- 视频、地图切换按钮 -->
-    <!-- <div class="uav-start-fly" @click="goSuspend">
-      <span>停飞页面</span>
-    </div> -->
-    <div v-if="isRunning" class="uav-start-fly  uav-start-stop" @click="handleStop">
-      <span>立即停飞</span>
+    <!-- 按钮 -->
+    <div class="uav-start-fly-wrap">
+      <template v-if="goSuspendShow">
+        <div class="uav-start-fly" @click="goSuspend">
+          <span>停飞页面</span>
+        </div>
+      </template>
+
+      <!-- TODO 草莓报错，需要先隐藏2021-08-18 -->
+      <!-- <div v-if="isRunning" class="uav-start-fly  uav-start-stop" @click="handleStop">
+        <span>立即停飞</span>
+      </div> -->
     </div>
+    
     <!-- 地图、视频 大屏幕 -->
     <div class="video-wrap">
       <!-- <video-player class="video-player vjs-custom-skin"
@@ -357,6 +364,9 @@
       </div>
     </div>
 
+    <!-- 弹框 -->
+    <sd-plan-dialog ref="planDialog" :planId="planId"  @changeForm="getForm"></sd-plan-dialog>
+
     <!-- 放大图片 -->
     <!-- //显示图片的组件 -->
     <sd-pic-show :imgUrl="picurl" :imgShow="imgShow" :list="bannerList" :curInd="currInd" @closeimg="imgClose"></sd-pic-show>
@@ -365,7 +375,19 @@
     <!-- {{droneId}} -->
     
     <!-- 测试图片 -->
-    <sd-job-file ref="jobFile"></sd-job-file>
+    <!-- <sd-job-file ref="jobFile"></sd-job-file> -->
+
+     <!-- 立即返航-弹框提示 -->
+    <div class="dialog-black" v-show="stopFlyShow" @click="handleStopFlyShow(0)" v-cloak></div>
+    <div class="dialog-main" v-show="stopFlyShow" v-cloak>
+      <h4 class="dialog-fly-name">友好提示</h4>
+      <img class="dialog-fly-drone-pic" src="/assets/images/drone-pic.png">
+      <div class="dialog-load">是否确认返航</div>
+      <div class="dialog-fly-btns">
+        <p class="dialog-fly-btn  dialog-fly-sure" @click="handleStopFlyShow(1)">确定</p>
+        <p class="dialog-fly-btn  dialog-fly-sure" @click="handleStopFlyShow(0)">取消</p>
+      </div>
+    </div>
 
   </div>
   
@@ -400,6 +422,9 @@ import { waypointsToMapProps } from '@/pages/plan/common';
 import { parseWaypoints } from '@/util/waypoint-parser';
 
 import PicShow from './picShow.vue';
+
+import PlanDialog from '@/components/plan-dialog/plan-dialog.vue';
+import { PlanDialogLevelClass } from '@/constants/plan-dialog-level-class';
 
 
 const CompoName = {
@@ -539,6 +564,11 @@ export default {
       currInd:undefined,
       // 是否点击立即停飞 （1-未点击，0-点击）
       isSuspend:1,
+      // 
+      stopFlyShow: false,
+      lastFlyObj:{},
+      // 返回暂停页面按钮是否显示
+      goSuspendShow:false
 
     }
   },
@@ -563,7 +593,9 @@ export default {
     // DroneMap
     [DroneMap.name]: DroneMap,
     [MonitorDepot.name]:MonitorDepot,
-    [PicShow.name]: PicShow
+    [PicShow.name]: PicShow,
+    // 
+    [PlanDialog.name]: PlanDialog,
   },
   computed: {
     swiper() {
@@ -856,12 +888,14 @@ export default {
         if(d.msg.notification && d.msg.notification.length>0){
           
           if(d.msg.notification[0].msg == "开始起飞"){
+            this.goSuspendShow = false
             this.actualStar = this.timestampToTime(d.msg.notification[0].time)
             this.flyStatus = 2
             console.log('无人机模式状态-开始起飞', this.flyStatus);
             
           }
           if(d.msg.notification[0].msg == "开始返航"){
+            this.goSuspendShow = false
             this.actualLand = this.timestampToTime(d.msg.notification[0].time)
             this.startLandShow = true
             this.flyStatus = 3
@@ -870,8 +904,8 @@ export default {
           // 先“返航完成”，后“任务执行完成”
           // TODO不知道哪个时间是定义为降落时间
           // TODO 任务执行完成 时图片下载完毕可以获取图片了
-          if(d.msg.notification[0].msg == "返航完成"){
-            
+          if(d.msg.notification[0].msg == "返航完成" || d.msg.notification[0].msg == "任务执行完成"){
+            this.goSuspendShow = true
             this.actualDuration = this.timestampToTime(d.msg.notification[0].time) 
             this.flyStatus = 4
             console.log('无人机模式状态-返航完成', this.flyStatus);
@@ -1210,37 +1244,71 @@ export default {
 
      // 停飞
     handleStop() {
-      // console.log('点击取消飞行');
+      console.log('点击取消飞行');
       this.isSuspend = 0
+      // this.$nextTick(() => this.$refs.planDialog.open());
       // 点击立即停飞后的弹框
-      // this.$nextTick(() => this.$refs.planDialog.close());
+      this.$nextTick(() => this.$refs.planDialog.close());
       if (!this.isRunning) return;
       /**
        * mutate element-ui's Notification object
        * @see https://github.com/ElemeFE/element/blob/v2.8.2/packages/notification/src/main.vue
        */
-      // const n = this.$notify({
-      //   offset: 50,
-      //   duration: 0,
-      //   type: 'info',
-      //   title: '测试测试MMM',
-      //   message: this.$t('plan.view.pending'),
-      // });
-      // cancelPlanJob(this.planId, this.runningContent.id).then(() => {
-      //   Object.assign(n.$data, {
-      //     message: this.$t('plan.view.stop_run'),
-      //     type: 'warning',
-      //     duration: 2000
-      //   });
-      //   n.startTimer();
-      // }).catch(e => {
-      //   Object.assign(n.$data, {
-      //     message: this.$t('plan.view.stop_fail', { code: e.status }),
-      //     type: 'error'
-      //   });
-      // });
+      const n = this.$notify({
+        offset: 50,
+        duration: 0,
+        type: 'info',
+        title: '历经停飞测试测试MMM',
+        message: this.$t('plan.view.pending'),
+      });
+      cancelPlanJob(this.planId, this.runningContent.id).then(() => {
+        Object.assign(n.$data, {
+          message: this.$t('plan.view.stop_run'),
+          type: 'warning',
+          duration: 2000
+        });
+        n.startTimer();
+      }).catch(e => {
+        Object.assign(n.$data, {
+          message: this.$t('plan.view.stop_fail', { code: e.status }),
+          type: 'error'
+        });
+      });
     },
+    // 
+    getForm(item) {
+      console.log('点击终止任务：飞行0');
+      let sef = this
+      sef.$nextTick(() => this.$refs.planDialog.close());
 
+      if('dialog' in item){
+        // 立即停飞
+        if(item.dialog.name == "终止了任务"){
+          this.stopFlyShow = true
+          console.log('点击终止任务：飞行1');
+          console.log('点击终止任务-获取的信息：飞行2', item)
+          this.lastFlyObj = item
+          console.log('暂停页面-起飞前的对象3', this.lastFlyObj)
+          sef.$nextTick(() => this.$refs.planDialog.close());
+          // item.dialog.buttons.forEach( it => {
+          //   it.name == "返航"
+          // })
+        }
+      }
+    },
+    handleStopFlyShow(status){
+      console.log('点击终止任务：飞行m --是返航没错了-00');
+      if(status == 1){
+        console.log('点击终止任务：飞行m --是返航没错了-0');
+        if(this.lastFlyObj.dialog.buttons[1].name == "返航"){
+          console.log('点击终止任务：飞行m --是返航没错了');
+          let message = this.lastFlyObj.dialog.buttons[1].message
+          MqttClient.mqtt.publish(`plans/${this.planId}/term`, message);
+          this.stopFlyShow = false
+        }
+      } 
+      this.stopFlyShow = false
+    }
   },
   created() {
     var _this = this; 
@@ -1344,14 +1412,27 @@ export default {
   position: relative;
   overflow: hidden;
 }
-.uav-start-fly{
-  cursor: pointer;
+.uav-start-fly-wrap{
   position: fixed;
   left: 220px;
   top:28px;
   margin:4px 0 0;
-  width:101px;
+  width:301px;
   height:33px;
+  z-index: 10;
+}
+.uav-start-fly{
+  display: inline-block;
+  margin:0 4px;
+  cursor: pointer;
+  margin:0 4px;
+  /* position: fixed;
+  left: 330px;
+  top:28px;
+  margin:4px 0 0;
+  width:101px;
+  height:33px; */
+   width:101px;
   text-align: center;
   background:url('assets/images/btn.png')no-repeat center center;
   background-size: cover;
@@ -1359,10 +1440,10 @@ export default {
   font-size: 14px;
   color:#fff;
   text-shadow: 0 0 14px #4AD4FF;
-  z-index: 12;
+  z-index: 10;
 }
 .uav-start-stop{
-  left: 220px;
+  /* left: 220px; */
   background:url('assets/images/btn-1.png')no-repeat center center;
 }
 .video-wrap{
@@ -1801,6 +1882,61 @@ export default {
   width: 24%;
   z-index: 3;
 }
+/* 返航 */
+.dialog-black{
+  width:100vw;
+  height:100vh;
+  position:fixed;
+  left: 0;
+  top:0;
+  z-index: 12;
+  background-color: rgba(0,0,0,0.8);
+}
+.dialog-main{
+  width:1200px;
+  height: 500px;
+  background:url('assets/images/dialog-bg.png')no-repeat center top;
+  background-size:100%;
+  position:fixed;
+  left: 50%;
+  top:50%;
+  margin-top:-260px;
+  margin-left:-600px;
+  z-index: 13;
+  text-align: center;
+}
+.dialog-fly-name{
+  font-size:24px;
+  font-weight: bold;
+  color:#B5E4FF;
+  margin: 70px 0 0;
+  text-shadow: 0 0 14px #4AD4FF;
+}
+.dialog-fly-drone-pic{
+  width:222px;
+  height: 160px;
+}
+.dialog-load{
+  text-align: center;
+  margin-top:10px;
+  font-size:16px;
+  color:#fff;
+  line-height: 24px;
+}
+.dialog-fly-txt{
+  margin:0;
+  font-size:16px;
+  color:#fff;
+  line-height: 24px;
+}
+.dialog-fly-txt2{
+  margin-top:12px;
+}
+.dialog-fly-span{
+  margin:0 15px;
+}
+
+
 
 .clearfix:before, .clearfix:after {
   content: "";

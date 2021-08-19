@@ -425,7 +425,7 @@ export default {
      * @param {MouseEvent} event
      */
     handleControlType(type) {
-     alert(type) 
+    //  alert(type) 
     //  alert(event)
       if (event.target.tagName === 'INPUT') return;
       // this.toggleJoystick();

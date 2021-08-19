@@ -11,8 +11,10 @@
      <!-- 左侧巡检 -->
     <div class="inspect-lft">
       <div class="inspect-cont">
-        <img class="inspect-icon" src="/assets/images/icon_time_full.png">
-        <span>当前巡检：</span><em>{{duration}}</em>
+        <!-- <img class="inspect-icon" src="/assets/images/icon_time_full.png">
+        <span>当前巡检：</span><em>{{duration}}</em> -->
+        <h4 style="color:red;display:none;">模式：{{journal}}</h4>
+        
       </div>
     </div>
 
@@ -48,12 +50,13 @@
               <p class="uav-start uav-start-no"  >立即起飞</p>
             </template>
           </template>
-           <template v-else>
+          
+           <!-- <template v-else>
               <p class="uav-start uav-start-stop" @click="handleExecute(0)" >立即停飞</p>
-           </template>
+           </template> -->
 
           <!-- <p class="uav-start"  @click="goFlyPage" >飞行页面</p> -->
-          <p class="uav-start"  @click="ces" >测试跳转页面</p>
+          <!-- <p class="uav-start"  @click="ces" >测试跳转页面</p> -->
        
           <p class="item-time"  v-if="countIsZoreShow">
             <!-- {{hour}}:{{min}}:{{second}} -->
@@ -189,7 +192,8 @@
                         <div class="airport-i-flex">
                           <img class="airport-i-icon" src="/assets/images/airport-icon1.png">
                           <span class="airport-i-lab">风向：</span>
-                          <span class="airport-i-val">{{selectedNodeDepot.msg.weather.WD}}</span>
+                          <span class="airport-i-val" v-if="selectedNodeDepot.msg.weather.WD != 0">{{selectedNodeDepot.msg.weather.WD}}</span>
+                          <span class="airport-i-val" v-else>{{weather.windDir}}</span>
                         </div>
                       </div>
                       <div class="airport-right-half">
@@ -272,7 +276,7 @@
     
     
     
-    <!--  -->
+    <!-- 是否起飞 -->
     <div class="dialog-black" v-show="dialogShow" @click="handleFlyBlock" v-cloak></div>
     <div class="dialog-main" v-show="dialogShow" v-cloak>
       <h4 class="dialog-fly-name">青南{{flyPlan.droneName}}巡检无人机</h4>
@@ -326,6 +330,28 @@
 
     <!--  -->
     <sd-plan-dialog ref="planDialog" :planId="planId"  @changeForm="getForm"></sd-plan-dialog>
+
+    <!-- 自检-无法起飞弹框 -->
+    <div class="dialog-black" v-show="noFlyShow" @click="handleFlyShow" v-cloak></div>
+    <div class="dialog-main" v-show="noFlyShow" v-cloak>
+      <h4 class="dialog-fly-name">友好提示</h4>
+      <img class="dialog-fly-drone-pic" src="/assets/images/drone-pic.png">
+      <div class="dialog-load">无人机自检，不符合起飞条件</div>
+      <div class="dialog-fly-btns">
+        <p class="dialog-fly-btn  dialog-fly-sure" @click="handleFlyShow">确定</p>
+      </div>
+    </div>
+
+    <!-- 倒计时-语音提示 preload="auto"-->
+    <!-- <button @click="countVoice('audio')" style="position: fixed; top:40px;left:40px;z-index:9999999;">播放</button> -->
+    <!-- <audio id="audio" src="/assets/videos/9733.mp3"  hidden></audio> -->
+     <!-- style="position: fixed; top:80px;left:40px;z-index:9999999;" -->
+    <audio id="audio" src="/assets/videos/9733.mp3"></audio>
+
+    <!-- 确认是否起飞-语音提示 -->
+    <!-- TODO 需要换成对应的语音提示资源 -->
+    <audio id="sureFly" src="/assets/videos/9733.mp3"></audio>
+
 
   </div>
 </template>
@@ -545,7 +571,11 @@ export default {
       // 当前预计执行时间
       nextInspectionTime:'',
       // 倒计时是否完成
-      countOver:false
+      countOver:false,
+      // true-无法起飞，false-可以起飞
+      modeVal:false,
+      // 自检失败，无法起飞
+      noFlyShow: false,
 
     }
   },
@@ -591,12 +621,17 @@ export default {
     ]),
     // 当前巡检 = 时长
     droneVal() {
+      // return this.drones[0].info.id
+      // this.drones = this.node.find(node => node.info.id === 1);
       return this.drones[0].info.id
     },
     selectedNode() {
+      console.log('node-信息1',this.node);
+      let nodeArr = this.node
       return this.node.find(node => node.info.id === this.droneVal);
     },
     duration() {
+      // 巡检时间
       const { time } = this.selectedNode.msg.drone_status;
       const options = {
         timeZone: 'UTC',
@@ -609,6 +644,7 @@ export default {
     },
     // 无人机id
     droneId() {
+      console.log('node-无人机信息11',this.drones);
       let droneOlny = undefined
       for (let d of this.drones) {
         droneOlny = d.info.id
@@ -617,6 +653,7 @@ export default {
     },
     // 机场id
     depotsId() {
+      console.log('node-机场信息11',this.depots);
       let depotsOlny = undefined
       for (let d of this.depots) {
         depotsOlny = d.info.id
@@ -635,6 +672,7 @@ export default {
     },
     // 机场信息
     selectedNodeDepot() {
+      console.log('信息：',this.node);
       return this.node.find(node => node.info.id === this.depotsId);
     },
     // 地图坐标
@@ -658,25 +696,81 @@ export default {
     },
     // 机场-markers
     markers() {
-      console.log('点点点MMM',this.depotMarkers);
-      let markerList = this.depotMarkers;
-      markerList.map(item => {
+      let markerList = []
+      // let markerList = this.depotMarkers;
+      let depotMarkerList = this.depotMarkers;
+      depotMarkerList.map(item => {
         if(item.name == "Depot"){
-          item.name = "莱87采油厂"
+          item.name = "莱87井场"
         }
       })
-      // markers.push(
-      //   {
-      //     type: 'depot',
-      //     id: d.info.id,
-      //     name: d.info.name,
-      //     position: {
-      //       lng: +status.lng,
-      //       lat: +status.lat,
-      //     }
-      //   }
-      // )
-
+      // 需要添加地图上需要添加的坐标点及其名称
+      let lngLatArr = [
+        {
+          id:'well11',
+          name:'L85-X11',
+          lng:118.914660,
+          lat:37.382160,
+          color:'#409eff'
+        },
+        {
+          id:'well12',
+          name:'L85-X12',
+          lng:118.9151680,
+          lat:37.382039,
+          color:'#409eff'
+        },
+        {
+          id:'well2',
+          name:'L85-X2',
+          lng:118.9150500,
+          lat:37.382100,
+          color:'#409eff'
+        },
+        {
+          id:'well5',
+          name:'L85-X5',
+          lng:118.91488792880563,
+          lat:37.38208138148277,
+          color:'#409eff'
+        },
+        {
+          id:'well4',
+          name:'L85-X4',
+          lng:118.9150980,
+          lat:37.381999,
+          color:'#409eff'
+        },
+        // {
+        //   id:'well6',
+        //   name:'L85-X6',
+        //   lng:118.91554712754251,
+        //   lat:37.38179632612156,
+        //   color:'#860370'
+        // },
+        
+      ];
+      
+      lngLatArr.forEach(item => {
+          markerList.push(
+            {
+              type: 'place',
+              id: item.id,
+              name:item.name,
+              position: {
+                lng: item.lng,
+                lat: item.lat,
+              },
+              style:{ "color": item.color },
+              action: ['room_preferences']
+            }
+            
+          )
+      })
+      depotMarkerList.forEach(itm => {
+        markerList.push(itm)
+      })
+      // console.log('井坐标',markerList);
       return [...markerList];
     },
     // 
@@ -714,6 +808,26 @@ export default {
         };
       }
       return statusFly
+    },
+    // 日志（机场、无人机）
+    journal(){
+      // true-无法起飞，false-可以起飞
+      let modeVal = false
+      // 机场
+       for (let de of this.depots) {
+         if(de.msg.notification && de.msg.notification.length>0){
+           console.log('机场-日志',de.msg);
+          de.msg.notification.map(le => {
+            if((le.level == 3) && !this.isRunning){
+              modeVal = true
+              console.log('无法起飞', le);
+              this.noFlyShow = true
+            }
+          })
+         }
+       }
+       return modeVal;
+
     }
     
 
@@ -727,6 +841,7 @@ export default {
         if(djs[0] == '00'){
           if(djs[1]=='00'){
             if(djs[2]=='00'){
+            this.countVoice('audio')
             this.handleExecute(1)
             this.countOver = true
             // this.ces()
@@ -741,7 +856,7 @@ export default {
         //oldValue  改变前的数据
       }
       //,deep: true
-    },
+    }
     // endDate:{
     //   handler(newValue,oldValue) {
     //     // 监听倒计时
@@ -753,6 +868,31 @@ export default {
     // }
   },
   created() {
+    // 刷新页面时，丢失数据，监听刷新，先存放在sessionStorage
+    if (sessionStorage.getItem("store")) {
+      this.$store.replaceState(
+       
+        Object.assign(
+          {},
+          this.$store.state,
+          JSON.parse(sessionStorage.getItem("store"))
+        )
+      );
+      sessionStorage.removeItem("store")
+    }
+   
+    //在页面刷新时将vuex里的信息保存到sessionStorage里
+    window.addEventListener("beforeunload", () => {
+      this.getIndexPlan()
+      // this.getWeather()
+      // sessionStorage.setItem("weather", JSON.stringify(this.weather));
+      sessionStorage.setItem("store", JSON.stringify(this.$store.state));
+    });
+    
+   
+    // 清除日志缓存
+    this.depots[0].msg.notification = []
+
     var _this = this; //声明一个变量指向Vue实例this，保证作用域一致
     this.timer = setInterval(function() {
       _this.currentTime = //修改数据date
@@ -784,14 +924,30 @@ export default {
     this.setPreference({ mapType });
   },
   mounted () {
-
     this.getIndexPlan()
-    // 
     this.getEquipList()
-    this.getWeather()
+    if(JSON.parse(sessionStorage.getItem("weather"))){
+      this.weather =  JSON.parse(sessionStorage.getItem("weather"))
+      console.log('获取缓存中的天气信息',this.weather);
+      // 清楚后只能刷新一次，不清楚就会有缓存
+      // sessionStorage.removeItem("weather")
+    }else{
+     console.log('缓存中没有天气信息，重新获取');
+     this.getWeather()
+    }
     
   },
   methods: {
+    ...mapActions([
+      // 'getUserInfo',
+      // 'initializeMqtt',
+      // 'getNodes',
+      // 'subscribeNodes',
+      // 'getPlans',
+      // 'subscribePlans',
+      // 地图
+      'setPreference'
+    ]),
     fullScreen(){},
     
     // 获取当前时间
@@ -834,10 +990,6 @@ export default {
       })
       return time_str
     },
-    // 地图
-    ...mapActions([
-      'setPreference'
-    ]),
     handleMove() {},
     handleMarkerClick(id, el) {},
     handleClose() {},
@@ -845,10 +997,11 @@ export default {
     
     // 任务列表
     async getIndexPlan(){
-      // 获取任务列
       const res = await indexPlan();
-      console.log('暂停页面-获取任务列', res)
+      console.log('暂停页面-获取任务列',res)
+      // 获取任务列
       let taskList = res
+      
       taskList.forEach(item => {
         if(typeof Number(item.description) === 'number'  && !isNaN(Number(item.description))){
           item.description = Number(item.description).toFixed(2)
@@ -857,7 +1010,7 @@ export default {
         }
       })
       this.taskData = taskList
-      this.inspectList[0].inspectVal = res.length
+      this.inspectList[0].inspectVal = taskList.length
 
       // 任务执行历史id
       this.taskData.forEach(item => {
@@ -911,6 +1064,8 @@ export default {
     // 装备使用装填
     getEquipList() {
       // 机场 selectedNodeDepot
+      console.log('机场状态信息',this.selectedNodeDepot);
+      
       switch ( this.selectedNodeDepot.msg.depot_status.door )
       {
         case 'closed':
@@ -933,28 +1088,39 @@ export default {
       {
         case 'error':
           this.equipLIstanbul[0].statusList[2].statusName ='充电器异常';
-          console.log('充电器异常MM',this.selectedNodeDepot.msg);
-          console.log('充电器异常MM2',this.selectedNodeDrons.msg);
-          
-          
+          break;
+        case 'ready':
+          this.equipLIstanbul[0].statusList[2].statusName ='充电器就绪';
+          break;
+        case 'charging':
+          this.equipLIstanbul[0].statusList[2].statusName ='充电器充电中';
+          break;
+        case 'protect':
+          this.equipLIstanbul[0].statusList[2].statusName ='充电器防护';
           break;
         default:
           this.equipLIstanbul[0].statusList[2].statusName ='充电器正常';
           break;
       }
-      // TODO 字段通讯不确定
+      // TODO 待草莓查看异常原因
+      console.log('机场异常',this.selectedNodeDepot.msg.depot_status.status);
+      
       switch ( this.selectedNodeDepot.msg.depot_status.status )
       {
         case 'error':
-          this.equipLIstanbul[0].statusList[3].statusName ='通讯异常';
+          // this.equipLIstanbul[0].statusList[3].statusName ='通讯异常';
+          this.equipLIstanbul[0].statusList[3].statusName ='机场异常';
+          break;
+        case 'ready':
+          this.equipLIstanbul[0].statusList[3].statusName ='机场就绪';
           break;
         default:
-          this.equipLIstanbul[0].statusList[3].statusName ='通讯正常';
+          // this.equipLIstanbul[0].statusList[3].statusName ='通讯正常';
+          this.equipLIstanbul[0].statusList[3].statusName ='机场正常';
           break;
       }
       // 无人机 selectedNodeDrons
-      // TODO 字段开机关机不确定
-      console.log('无人机状态',this.selectedNodeDrons.msg.drone_status.status);
+      console.log('无人机状态信息',this.selectedNodeDrons);
       
       switch ( this.selectedNodeDrons.msg.drone_status.status )
       {
@@ -986,12 +1152,20 @@ export default {
     },
     // 天气
     getWeather() {
-      const { lng, lat } = this.selectedNodeDepot.status.status;
-      return Promise.all([
-        minutely(lng, lat).then(data => this.minutely = data.minutely || []),
-        weather(lng, lat).then(data => this.weather = data.now || {}),
-        warning(lng, lat).then(data => this.alert = data.warning || [])
-      ]);
+      // sessionStorage.removeItem("weather")
+      const { lng, lat } = this.selectedNodeDepot.status.status
+      // let newval = Promise.all([
+      //   minutely(lng, lat).then(data => this.minutely = data.minutely || []),
+      //   weather(lng, lat).then(data => this.weather = data.now || {}),
+      //   warning(lng, lat).then(data => this.alert = data.warning || [])
+      // ]);
+      weather(lng, lat).then(data => {
+        this.weather = data.now || {}
+        sessionStorage.setItem("weather", JSON.stringify(this.weather));
+        console.log('缓存中天气状态信息',JSON.parse(sessionStorage.getItem("weather")));
+        
+      })
+      // return this.weather
     },
     // 秒=>时分秒
     formatSeconds(value) {
@@ -1234,6 +1408,7 @@ export default {
     },
     // 获取开始执行任务时间
     handleExecute(status) {
+      // this.modeVal = false
       // 点击立即起飞  获取下达任务-日期
       let execteTime = this.parseTime((new Date()),'{y}-{m}-{d}') + ' ' + this.parseTime(this.currentDate,'{h}:{i}:{s}')
       this.$store.commit(EXE.SET_EXECUTE, execteTime)
@@ -1269,7 +1444,8 @@ export default {
       this.weatherItem = []
       this.flyItem = []
       // 点击立即停飞后的弹框
-      // this.$nextTick(() => this.$refs.planDialog.close());
+      // this.$nextTick(() => this.$refs.planDialog.open());
+      this.$nextTick(() => this.$refs.planDialog.close());
       if (!this.isRunning) return;
       /**
        * mutate element-ui's Notification object
@@ -1320,6 +1496,9 @@ export default {
 
         // 航点检测获取
         if(item.dialog.buttons[1].name == "↑开始起飞↑"){
+          console.log('倒计时11');
+          // 确认是否起飞弹框-- 语音提示
+          this.countVoice('sureFly')
           // 显示自带弹框
           // sef.$nextTick(() => this.$refs.planDialog.open());
           // 隐藏自带弹框
@@ -1352,6 +1531,13 @@ export default {
             }
           }
 
+
+        }
+
+        // 立即停飞
+        if(item.dialog.name == "终止了任务"){
+          console.log('点击终止任务');
+          console.log('点击终止任务-获取的信息', item)
 
         }
       }
@@ -1459,11 +1645,21 @@ export default {
       } else {
         return obj;
       }
+    },
+    // 自检无法起飞弹框
+    handleFlyShow(){
+      this.noFlyShow = false
+    },
+    // 倒计时语音提示
+    countVoice(id){
+      console.log('倒计时');
+      console.log('倒计时id未：',id);
+      document.getElementById(id).play()
     }
-    // 
 
   },
   beforeDestroy() {
+    sessionStorage.removeItem("weather")// 在Vue实例销毁前，清空weather缓存
     if (this.timer) {
       clearInterval(this.timer); // 在Vue实例销毁前，清除我们的定时器
     }
@@ -1782,7 +1978,7 @@ export default {
   font-weight: normal;
 }
 .el-table--striped .el-table__body tr.el-table__row--striped td{
-  background: rgba(90,146,255,0.1);
+  background: rgba(90,146,255,0.03);
 }
 .el-table--striped .el-table__body tr.el-table__row:hover td{
    background: rgba(90,146,255,0.2);

@@ -1,5 +1,5 @@
 <template>
-  <sd-node-monitor ref="monitor" :point="point" :status="status"></sd-node-monitor>
+  <sd-node-monitor class="video-monitor" ref="monitor" :point="point" :status="status"></sd-node-monitor>
 </template>
 
 <script>
@@ -172,7 +172,8 @@ export default {
      * @param {MouseEvent} event
      */
     handleControlType(type) {
-     alert(type) 
+    //  alert(type) 
+    console.log('控制',type);
     //  alert(event)
       if (event.target.tagName === 'INPUT') return;
       // this.toggleJoystick();
@@ -579,7 +580,7 @@ export default {
   align-items: center;
   justify-content: flex-end;
 }
-.monitor-drone-control--vertical {
+.video-monitor .monitor-drone-control--vertical {
   display: flex;
   justify-content: flex-end;
 }

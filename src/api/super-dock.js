@@ -84,7 +84,13 @@ export function runPlanJob(id) {
 
 /** @returns {Promise<SDWC.PlanJob[]>} */
 export function getPlanJobs(id) {
-  return wr.url(`/api/v2/plans/${id}/jobs/`)
+  
+  // return wr.url(`/api/v2/plans/${id}/jobs/`)
+  
+  // 刷新暂停页面时无法给以正确地址，因此改了，需要确定服务器地址是指定的
+  let mm = wr.url(`/api/v2/plans/${id}/jobs/`)
+  mm._url = 'https://watuav.sbnet.xyz/gosd'+`/api/v2/plans/${id}/jobs/`
+  return mm
     .get()
     .json(json => json || []);
 }
@@ -124,7 +130,14 @@ export function uploadFile(files) {
  * 任务列表
  */
 export function indexPlan() {
-  return wr.url('/api/v2/plans/')
+  // console.log('ddddd',wr.url('/api/v2/plans/'));
+
+  // return wr.url('/api/v2/plans/')
+
+  // 刷新暂停页面时无法给以正确地址，因此改了，需要确定服务器地址是指定的
+  let mm = wr.url('/api/v2/plans/')
+  mm._url = 'https://watuav.sbnet.xyz/gosd'+'/api/v2/plans/'
+  return mm
     .get()
     .json();
 }

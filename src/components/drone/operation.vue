@@ -65,6 +65,30 @@
 
     <!-- 拍照 -->
     <div class="btm-btn">
+      <!-- 广角、变焦、红外 -->
+      <template v-if="videoSources.length > 0">
+        <div class="btm-btn-item"  v-for="s of videoSources" :key="s.source" @click="handleVideoSource(s.source, $event)">{{s.label}}镜头</div>
+        
+        <!-- <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item v-if="videoSources.length === 0" disabled>
+            <span v-t="'monitor.source.empty'"></span>
+          </el-dropdown-item>
+          <template v-else>
+            <el-dropdown-item
+              v-for="s of videoSources"
+              :key="s.source"
+              @click.native="handleVideoSource(s.source, $event)"
+            >
+            bbb
+              <el-radio :value="msg.gimbal.source" :label="s.source">
+                <span v-t="s.label || `monitor.source.${s.source}` || s.source"></span>
+              </el-radio>
+            </el-dropdown-item>
+            </template>
+        </el-dropdown-menu> -->
+
+      </template>
+      <!-- 动作 -->
       <div class="btm-btn-item btm-btn-over"  v-if="availableActions.length==0">无视频</div>
       <!-- <div class="btm-btn-item">重新聚焦</div>
       <div class="btm-btn-item">重新聚焦</div>
@@ -182,6 +206,7 @@ export default {
     videoSources() {
       const params = this.point.params || { source: [] };
       return params.source;
+      // return get(this.point.params, 'source', []);
     },
     availableControls() {
       const params = this.point.params || { control: {} };
@@ -239,6 +264,9 @@ export default {
      * @param {MouseEvent} event
      */
     async handleVideoSource(source, event) {
+      console.log('广焦红-0');
+      console.log('广焦红-1',source);
+      console.log('广焦红-2',event);
       /**
        * in dom like `<label><input type="radio"><span>text<span></label>`,
        * click on span causes label's click event triggers twice.
@@ -247,6 +275,7 @@ export default {
       if (event.target.tagName === 'INPUT') return;
       this.source.pending = true;
       try {
+         console.log('广焦红-3');
         await this.$mqtt(this.point.node_id, {
           mission: 'camera',
           arg: { action: 'source', value: source }
@@ -331,7 +360,8 @@ export default {
       });
     },
     handleGimbalRestore() {
-      alert('重置-真正')
+      // alert('重置-真正')
+      console.log('重置-真正');
       this.handleGimbalCtl({ yaw: 0, pitch: 0 });
       this.gimbal.yaw = 0;
       this.gimbal.pitch = 0;
@@ -754,7 +784,7 @@ export default {
   align-items: center;
   justify-content: flex-end;
 }
-.monitor-drone-control--vertical {
+.only-wrap .monitor-drone-control--vertical {
   display: flex;
   justify-content: flex-end;
 }
@@ -848,7 +878,8 @@ export default {
 }
 /* 拍照 */
 .btm-btn{
-  margin-top:124px;
+  /* margin-top:124px; */
+  margin-top:104px;
   float: right;
   margin-right:10px;
   width: 244px;
