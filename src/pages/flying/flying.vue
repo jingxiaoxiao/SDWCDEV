@@ -9,9 +9,9 @@
       </template>
 
       <!-- TODO 草莓报错，需要先隐藏2021-08-18 -->
-      <!-- <div v-if="isRunning" class="uav-start-fly  uav-start-stop" @click="handleStop">
+      <div v-if="isRunning" class="uav-start-fly  uav-start-stop" @click="handleStop">
         <span>立即停飞</span>
-      </div> -->
+      </div>
     </div>
     
     <!-- 地图、视频 大屏幕 -->
