@@ -331,11 +331,9 @@
                   <!-- slides -->
                   <swiper-slide v-for="(item, index) in bannerList" :key="index">
                     <div class="img-pic">
-                      <img :src="item.simageUrl" alt="">
+                      <!-- <img :src="item.imgUrl" alt=""> -->
                     </div>
-                    <p class="swiper-txt" v-if="item.photoTime">{{item.photoTime}}-{{index}}</p>
-                    <p class="swiper-txt" v-else>{{item.createDate}}-{{index}}</p>
-                    
+                    <p class="swiper-txt">{{item.time}}-{{index}}</p>
                   </swiper-slide>             
                   <!-- Optional controls -->
                   <!-- <div class="swiper-button-prev" slot="button-prev"></div> -->
@@ -371,7 +369,7 @@
 
     <!-- 放大图片 -->
     <!-- //显示图片的组件 -->
-    <sd-pic-show :yimageUrl="picurl" :imgShow="imgShow" :list="bannerList" :curInd="currInd" @closeimg="imgClose"></sd-pic-show>
+    <sd-pic-show :imgUrl="picurl" :imgShow="imgShow" :list="bannerList" :curInd="currInd" @closeimg="imgClose"></sd-pic-show>
 
     <!-- 测试 -->
     <!-- {{droneId}} -->
@@ -390,9 +388,6 @@
         <p class="dialog-fly-btn  dialog-fly-sure" @click="handleStopFlyShow(0)">取消</p>
       </div>
     </div>
-
-
-    <sd-plan-readonly :plan="planToShow" style="display:none;"></sd-plan-readonly>
 
   </div>
   
@@ -419,7 +414,6 @@ import Monitor from '@/components/drone/video2.vue';
 import Operation from '@/components/drone/operation.vue';
 
 import { getPlanJobs, picBlob, cancelPlanJob } from '@/api/super-dock';
-import PlanReadonly from '@/components/plan/readonly.vue';
 import JobFile from '@/components/job-file/job-file.vue';
 
 import { weather, minutely, warning } from '@/api/heweather';
@@ -431,9 +425,7 @@ import PicShow from './picShow.vue';
 
 import PlanDialog from '@/components/plan-dialog/plan-dialog.vue';
 import { PlanDialogLevelClass } from '@/constants/plan-dialog-level-class';
-
-import axios from 'axios'
-import request from '@/util/request'
+import { log } from 'util';
 
 
 const CompoName = {
@@ -495,34 +487,34 @@ export default {
        // banner
       swiperOption: {},
       bannerList:[
-        // {
-        //   id:'001',
-        //   imgUrl: '../assets/images/airport-icon1.png',
-        //   time:'2021-06-04 16:55:35'
-        // },
-        //  {
-        //   id:'002',
-        //   imgUrl: '../assets/images/airport-icon2.png',
-        //   time:'2021-06-04 16:55:35'
-        // },
-        //  {
-        //   id:'003',
-        //   imgUrl: '../assets/images/airport-icon3.png',
-        //   time:'2021-06-04 16:55:35'
-        // },
-        //  {
-        //   id:'004',
-        //   imgUrl: '../assets/images/airport-icon4.png',
-        //   time:'2021-06-04 16:55:35'
-        // }, {
-        //   id:'005',
-        //   imgUrl: "../assets/images/airport-icon5.png",
-        //   time:'2021-06-04 16:55:35'
-        // }, {
-        //   id:'006',
-        //   imgUrl: "../assets/images/airport-icon6.png",
-        //   time:'2021-06-04 16:55:35'
-        // }
+        {
+          id:'001',
+          imgUrl: '../assets/images/airport-icon1.png',
+          time:'2021-06-04 16:55:35'
+        },
+         {
+          id:'002',
+          imgUrl: '../assets/images/airport-icon2.png',
+          time:'2021-06-04 16:55:35'
+        },
+         {
+          id:'003',
+          imgUrl: '../assets/images/airport-icon3.png',
+          time:'2021-06-04 16:55:35'
+        },
+         {
+          id:'004',
+          imgUrl: '../assets/images/airport-icon4.png',
+          time:'2021-06-04 16:55:35'
+        }, {
+          id:'005',
+          imgUrl: "../assets/images/airport-icon5.png",
+          time:'2021-06-04 16:55:35'
+        }, {
+          id:'006',
+          imgUrl: "../assets/images/airport-icon6.png",
+          time:'2021-06-04 16:55:35'
+        }
       ],
       // 当前日期
       currentDate:dateTime,
@@ -532,8 +524,7 @@ export default {
       // mapType
       mapType: 'sd-map-mapbox',
       // 停飞页面传来值
-      planId:0,
-      jobId:0,
+      planId:undefined,
       starTime:'2021-05-25 15:45:22',
       flyDuration:'2021-05-25 15:55:22',
       landTime:'2021-05-25 16:45:22',
@@ -572,27 +563,15 @@ export default {
       picurl:'',
       imgShow:false,
       currInd:undefined,
-      picReady:false, //图片就绪
-      taskHistory:[], // 图片获取的对应任务
+      // 图片上传完毕
+      picReady:false,
       // 是否点击立即停飞 （1-未点击，0-点击）
       isSuspend:1,
       // 
       stopFlyShow: false,
       lastFlyObj:{},
       // 返回暂停页面按钮是否显示
-      goSuspendShow:false,
-      // 执行任务对象
-      planH:{},
-      downId:0, //下载id
-      // 图片是否处理完成
-      isDealt:false,
-      // 图片列表
-      picListData:[],
-      PICPATH:'http://192.168.0.105:8080',
-      timerPic: "",//定义一个定时器的变量
-      failIndex: 0, // 接口通知401调用次数
-      nullIndex: 0,// 接口通知402调用次数
-      timerNotic: "",//定义一个定时器的变量
+      goSuspendShow:false
 
     }
   },
@@ -603,35 +582,16 @@ export default {
         this.updateCurrentWaypoints();
       }
     },
-    // 监听是否获取到下载链接id
-    downId:{
-      handler(newValue,oldValue){
-        if(newValue && newValue != 0 && newValue != oldValue ){
-          if(this.picReady){
-            if(this.jobs.length > 0){
-              console.log('图片-参数老值f新值t3');
-              this.postTask()
-            }
-          }
+    picReady: {
+      handler(newValue,oldValue) {
+        if(newValue && !oldValue){
+          // TODO 调用图片完成通知接口
+          console.log('图片-参数', this.planId);
+          console.log('图片-参数2', this.jobs);
+          // this.
         }
       }
-    },
-    // 是否处理完成
-    isDealt:{
-      handler(newValue,oldValue){
-        console.log('图片下载2：-监听计时器1')
-         let that = this
-        if(newValue){
-           console.log('图片下载2：监听计时器2-最新值',newValue)
-          // 调用接口
-          that.getPicList()
-        }
-        // else{
-        //   clearTimeout(that.timerPic)
-        // }
-      }
-    },
-    
+    }
   },
   components: {
     [SdMap.name]: SdMap,
@@ -649,60 +609,6 @@ export default {
     [PicShow.name]: PicShow,
     // 
     [PlanDialog.name]: PlanDialog,
-    [PlanReadonly.name]: PlanReadonly,
-  },
-  created() {
-    // 测试调用图片接口
-    // this.postTask()
-    // 单独通知调用获取图片接口
-    // this.getPicList()
-
-    var _this = this; 
-    _this.swiperOption= {
-        slidesPerView:5,
-        simulateTouch:true,
-        // loop: true,
-        observer: true,
-        observeParents: true,
-        autoplay: {
-          delay: 1000,
-          disableOnInteraction: false
-        },
-        effect: 'slide',
-        navigation: {
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev',
-        },
-        on:{
-            tap: function () {
-              console.log('什么情况',_this.bannerList);
-              _this.imgShow = true
-              _this.currInd = this.clickedIndex
-              _this.picurl = _this.bannerList[this.clickedIndex].simageUrl
-            }
-        },
-      },
-
-    // 
-    this.timer = setInterval(function() {
-      _this.currentTime = //修改数据date
-        new Date().getFullYear() +
-        "-" +
-        _this.appendZero((new Date().getMonth() + 1)) +
-        "-" +
-        _this.appendZero(new Date().getDate()) +
-        " " +
-        _this.appendZero(new Date().getHours()) +
-        ":" +
-        _this.appendZero(new Date().getMinutes()) +
-        ":" +
-        _this.appendZero(new Date().getSeconds());
-    }, 1000);
-
-    this.getPlanJobs();
-    this.setPreference({ mapType });
-
-    
   },
   computed: {
     swiper() {
@@ -730,6 +636,7 @@ export default {
          d.info.points.map(point => {
            if (!point.params) return PlaceStyle;
            let placeStyle = Object.assign({}, PlaceStyle, get(point, 'params.common.place', {}))
+            console.log('placeStyle-2',placeStyle);
            return placeStyle;
          })
        }
@@ -740,10 +647,11 @@ export default {
          d.info.points.map(point => {
            if (!point.params) return PlaceStyle;
            placeStyle = Object.assign({}, PlaceStyle, get(point, 'params.common.place', {}))
+            console.log('placeStyle-polylines-2',placeStyle);
           //  return placeStyle;
          })
        }
-      // 地图路线 placeStyle
+      console.log('地图路线-polylines-1ddd',placeStyle);
       let that = this
       const polylines = [];
       for (const d of this.drones) {
@@ -776,8 +684,7 @@ export default {
           }
         }
       }
-      // 地图路线dpolylines
-      // console.log('地图路线d',polylines);
+      console.log('地图路线d',polylines);
       
       return polylines;
     },
@@ -824,11 +731,11 @@ export default {
          d.info.points.map(point => {
            if (!point.params) return PlaceStyle;
            placeStyle = Object.assign({}, PlaceStyle, get(point, 'params.common.place', {}))
-          // console.log('placeStyle-placeMarkers-2',placeStyle);
+            console.log('placeStyle-placeMarkers-2',placeStyle);
           //  return placeStyle;
          })
        }
-      // console.log('地图路线-placeMarkers-1ddd',placeStyle);
+      console.log('地图路线-placeMarkers-1ddd',placeStyle);
 
       const { place } = this.drones[0].msg;
       const markers = [];
@@ -846,7 +753,7 @@ export default {
       return markers;
     },
     markers() {
-      // console.log('waypoints-原始',this.waypoints.map(w => w.markers).flat());
+      console.log('waypoints-原始',this.waypoints.map(w => w.markers).flat());
       // console.log('获取数据-无人机-markers', ...this.depotMarkers)
       // return [...this.depotMarkers, ...this.droneMarkers, ...this.placeMarkers];
        return [
@@ -871,6 +778,7 @@ export default {
       if (time >= 3600) options.hour = 'numeric';
       return new Date(time * 1000).toLocaleString('en-US', options);
     },
+   
     // 无人机id
     droneId() {
       let droneOlny = undefined
@@ -919,7 +827,7 @@ export default {
       const nodeId = this.depotsId;
       let node = this.node.find(node => node.info.id === nodeId);
      
-      // 之前代码
+      // // 之前代码
       let videoObj 
       this.selectedNodeDepot.info.points.map(point => {
         if(point.point_type_name == "livestream_webrtc2"){
@@ -1012,11 +920,15 @@ export default {
             this.flyStatus = 4
             console.log('无人机模式状态-返航完成', this.flyStatus);
           }
-          // 任务执行完成 时图片下载完毕可以获取图片了
+          // TODO 任务执行完成 时图片下载完毕可以获取图片了
+          // TODO 首先试飞找到图片下载完毕的判断依据，调用任务历史接口
+          // 其次调用接口把任务id和下载id获取到，找到下载接口picBlob
            if(d.msg.notification[0].msg == "已下载100%" || d.msg.notification[0].msg == "任务执行完成"){
              this.picReady = true
+             console.log('图片：',d.msg.notification[0].msg);
+            //  TODO 调用获取任务历史任务的接口
            } else{
-            //  this.picReady = false
+             this.picReady = false
            }
 
         }
@@ -1062,15 +974,6 @@ export default {
       return this.node.find(node => node.info.id === this.depotsId);
     },
     //图片
-    planToShow() {
-      this.planH.id = this.planId
-      if (!this.isRunning) return this.planH;
-      
-      return Object.assign({}, this.planH, {
-        files: Object.assign({}, this.planH.files, this.runningContent.files),
-        extra: Object.assign({}, this.planH.extra, this.runningContent.extra)
-      });
-    },
     ...mapState({ 
         /**
        * @param {SDWC.State} state
@@ -1079,28 +982,6 @@ export default {
       runningContent(state) {
         /** @type {SDWC.PlanRunning} */
         const running = state.plan.running.find(r => r.id === this.planId);
-        
-        console.log('图片图片mmm',running);
-        if(running){
-          // this.planH = {}
-          if(running.running.id == this.jobId &&  running.running.plan_id == this.planId){
-            if(running.running.job.files != null){
-              this.planH = running.running
-              console.log('图片，这是我们要的1',running.running.job.files);
-              console.log('图片，这是我们要的2',this.planH);
-              if(running.running.job.files['下载链接']){
-                console.log('图片，you下载链接',running.running.job.files['下载链接']);
-                this.downId = Number(this.planH.job.files['下载链接']) 
-                console.log('图片，you下载链接2',this.downId);
-              }else{
-                console.log('图片，wu下载链接');
-              }
-            }
-            
-          }
-        }
-        
-
         return running ? running.running : null;
       },
       plans: state => state.plan.info,
@@ -1113,9 +994,6 @@ export default {
     plan() {
       // 当前plans
       return this.plans.find(p => p.id === this.planId);
-    },
-    jobsToShow(){
-      return this.jobs
     },
     
   },
@@ -1188,7 +1066,8 @@ export default {
     ]),
 
      handlePathClear() {
-      //  console.log('清除',this.drones[0]);
+       console.log('清楚',this.drones[0]);
+       
       this.clearDronePath(this.drones[0].info.id);
     },
     // 订阅测试
@@ -1267,7 +1146,7 @@ export default {
       // let mm = 4
       console.log('页面无人机状态-zzz-最终',this.flyStatus);
       
-      this.$router.replace({
+      this.$router.push({
         path: "/suspend",
         query: { planId: this.planId, flyStatus:this.flyStatus },
       });
@@ -1277,10 +1156,6 @@ export default {
       this.videoBigShow = !this.videoBigShow
     },
     // 图片
-    sortJobs(order = 'descending') {
-      const modifier = order === 'descending' ? -1 : 1;
-      this.jobs.sort((a, b) => (a.created_at - b.created_at) * modifier);
-    },
     // 判断是否降落
     async getPlanJobs() {
       this.job.loading = true;
@@ -1290,10 +1165,37 @@ export default {
       }
       res.forEach(l => l.created_at = new Date(l.created_at));
       this.jobs = res;
-      console.log('图片：1任务历史列表',this.jobs)
-      this.sortJobs();
+      console.log('图片：1任务历史',this.jobs)
       this.job.loading = false;
+      
+      // if(this.jobs.files.name == "下载链接"){
+        // this.$refs.jobFile.open(this.jobs.files.blobId);
+        // 测试
+        let blobID = 913
+        // this.$refs.jobFile.open(blobID);
+      // }
 
+      // 2021-07-14 新增内容
+      // 
+      this.jobs.forEach(item => {
+        if(item.id == this.planId ){
+          console.log('图片：具体files内容-飞行中：', item)
+          if(item.files['下载链接']){
+            console.log('有下载链接') 
+            this.picBlob(item.files['下载链接'])
+          }else{
+           console.log('图片：没有下载链接') 
+          }
+        }
+       
+      })
+       
+    },
+    // 获取具体任务下的图片集合
+    async picBlob(fileId) {
+      let mm = '231'
+      let res = await picBlob(mm);
+      console.log('图片：历史图片集合：', res)
     },
     /**
      * @param {SDWC.PlanJob[]} jobs
@@ -1312,13 +1214,6 @@ export default {
           created_at: now,
           updated_at: now
         }, runningJob));
-         console.log('图片-详细内容fff',jobs);
-         jobs.map(itm => {
-           if(itm.job_id == this.jobId && itm.plan_id == this.planId){
-             console.log('图片是这个吗-patchRunningJob',itm);
-              this.planH = itm
-            }
-         })
       } else {
         if (job.temporary) {
           job.files = runningJob.files;
@@ -1326,190 +1221,8 @@ export default {
         } else {
           job.files = Object.assign({}, job.files, runningJob.files);
           job.extra = Object.assign({}, job.extra, runningJob.extra);
-         
-          
         }
       }
-    },
-    // 调用图片上传成功的通知接口
-    // http://192.168.0.105:8080/watwise_war/Dingapp/ImageIn?taskid=任务号&imageid=图片编号    
-    // 返回结果   {"message":"请求成功","status":200}           401   json下载失败  402  json内容为空
-    // 获取图片接口
-    // http://192.168.0.105:8080/watwise_war/Dingapp/ImageList?taskid=任务号
-
-    async postTask(){
-      let that =this
-      console.log('图片下载1：调用通知接口1');
-      // this.jobId = 329
-      // this.jobId = 1190
-      // this.downId = 1180
-      
-      let data = {
-        taskid:this.jobId, // 任务执行历史id
-        imageid:this.downId, // 下载链接id
-        // pic_plan_id:this.planId, // 任务id
-      }
-      
-      console.log('图片下载1：调用通知接口2-参数',data);
-      // console.log('ddd',url);
-      axios.get('/watwise_war/Dingapp/ImageIn', {
-　　    params: data
-      }).then(function (response) {
-    　　console.log('图片下载1：调用通知接口3-返回值',response);
-        if(response.data.status == 200){
-          that.isDealt = true
-          that.failIndex = 0
-          that.nullIndex = 0
-        } 
-        // 暂时不用判读
-        // else if(response.data.status == 401){
-        //   // json下载失败
-        //   that.failIndex = that.failIndex + 1
-        //    if(that.failIndex < 2){
-        //     that.timerNotic = setTimeout(function(){
-        //       console.log('图片下载3：通知接口定时器3')
-        //       // 调用图片返回状态
-        //       that.postTask()
-        //     },1000 * 60 * 1);
-        //    }else {
-        //     if(that.timerNotic){
-        //       clearInterval(that.timerNotic);
-        //     }
-        //     // 弹出提示json下载失败
-        //     that.$message({
-        //       message: '图片文件下载失败',
-        //       type: 'warning'
-        //     });
-        //   }
-        // } else if(response.data.status == 402){
-        //   // json内容为空
-        //   that.nullIndex = that.nullIndex + 1
-        //   if(that.nullIndex < 2){
-        //     that.timerNotic = setTimeout(function(){
-        //       console.log('图片下载3：通知接口定时器3')
-        //       // 调用图片返回状态
-        //       that.postTask()
-        //     },1000 * 60 * 1);
-        //    }else {
-        //     if(that.timerNotic){
-        //       clearInterval(that.timerNotic);
-        //     }
-        //     // 弹出提示json内容为空
-        //     that.$message({
-        //       message: '图片文件内容为空',
-        //       type: 'warning'
-        //     });
-        //   }
-          
-        // }
-
-      }).catch(function (error) {
-        that.isDealt = false
-        console.log('图片下载1：调用通知接口4-报错',error);
-        
-      });
-
-    
-    },
-    // 时间转换 补零
-    formatTen(num) { 
-        return num > 9 ? (num + "") : ("0" + num); 
-    },
-    // 时间转换 标准时间改为2021/08/19 14:16这种格式
-    formatDate(date) { 
-        var year = date.getFullYear(); 
-        var month = date.getMonth() + 1; 
-        var day = date.getDate(); 
-        var hour = date.getHours(); 
-        var minute = date.getMinutes(); 
-        var second = date.getSeconds(); 
-        return year + "/" + this.formatTen(month) + "/" + this.formatTen(day) + " " + this.formatTen(hour) + ":" + this.formatTen(minute);
-    },
-    // 获取图片列表
-    async getPicList(){
-      console.log('图片下载3：图片获取1');
-      // this.jobId = 329
-      // this.jobId = 310
-      //  this.jobId = 329
-      // this.jobId = 430
-      // this.jobId = 1190
-      let that = this
-      let dataVal = {
-        taskid:this.jobId, // 任务执行历史id
-      }
-      console.log('图片下载3：图片获取2-参数',dataVal);
-      // let picList = []
-      axios.get('/watwise_war/Dingapp/ImageList', {
-　　    params: dataVal
-      }).then(function (response) {
-        that.isDealt = false
-        console.log('图片下载3：无数据再次调用接口',that.isDealt);
-    　　console.log('图片下载3：图片获取3-返回值',response);
-        let picList = []
-        let hasVal = JSON.stringify(response.data) === '{}'? true : false
-        console.log('图片下载3：图片获取4-是否为空',!hasVal);
-        if(!hasVal){
-          picList = response.data.result
-          picList.map(res => {
-            let timeArr = res.yimageUrl.split("/")
-            let timeZ = timeArr[timeArr.length-1]
-            let timeB = timeZ.split("_")[1]
-            res.photoTime = timeB.slice(0,4)+'-'+timeB.slice(4,6)+'-'+timeB.slice(6,8)+' '+timeB.slice(8,10)+':'+timeB.slice(10,12)+':'+timeB.slice(12,14)
-            res.simageUrl = that.PICPATH + res.simageUrl
-            res.yimageUrl = that.PICPATH + res.yimageUrl
-            
-          })
-          
-          that.swiperOption= {
-            slidesPerView:5,
-            simulateTouch:true,
-            // loop: true,
-            observer: true,
-            observeParents: true,
-            autoplay: {
-              delay: 1000,
-              disableOnInteraction: false
-            },
-            effect: 'slide',
-            navigation: {
-              nextEl: '.swiper-button-next',
-              prevEl: '.swiper-button-prev',
-            },
-            on:{
-                tap: function () {
-                  console.log('图片下载-什么情况5',picList[that.clickedIndex].simageUrl);
-                  that.imgShow = true
-                  that.currInd = that.clickedIndex
-                  that.picurl = picList[that.clickedIndex].simageUrl
-                }
-            },
-          },
-          that.bannerList = picList
-          console.log("图片下载3：图片获取6",that.bannerList);
-        } else{
-          // that.isDealt = false
-          // that.isDealt = true
-          that.timerPic = setTimeout(function(){
-            console.log('图片下载3：-监听计时器3')
-            // 调用图片返回状态
-            that.getPicList()
-          },1000 * 60 * 5);
-        }
-        
-      }).catch(function (error) {
-        console.log('图片下载3：报错',error);
-      });
-      
-    },
-    ccss(){
-      console.log('计时器调用一次');
-      
-    },
-    // 获取具体任务下的图片集合
-    async picBlob(fileId) {
-      let mm = '231'
-      let res = await picBlob(mm);
-      console.log('图片：历史图片集合：', res)
     },
     // 2021-07-21航点
     async updateCurrentWaypoints() {
@@ -1619,6 +1332,52 @@ export default {
       this.stopFlyShow = false
     }
   },
+  created() {
+    var _this = this; 
+    _this.swiperOption= {
+        slidesPerView:5,
+        simulateTouch:true,
+        // loop: true,
+        observer: true,
+        observeParents: true,
+        autoplay: {
+          delay: 1000,
+          disableOnInteraction: false
+        },
+        effect: 'slide',
+        navigation: {
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev',
+        },
+        on:{
+            tap: function () {
+              console.log('什么情况',_this.bannerList[this.clickedIndex].imgUrl);
+              _this.imgShow = true
+              _this.currInd = this.clickedIndex
+              _this.picurl = _this.bannerList[this.clickedIndex].imgUrl
+            }
+        },
+      },
+
+    // 
+    this.timer = setInterval(function() {
+      _this.currentTime = //修改数据date
+        new Date().getFullYear() +
+        "-" +
+        _this.appendZero((new Date().getMonth() + 1)) +
+        "-" +
+        _this.appendZero(new Date().getDate()) +
+        " " +
+        _this.appendZero(new Date().getHours()) +
+        ":" +
+        _this.appendZero(new Date().getMinutes()) +
+        ":" +
+        _this.appendZero(new Date().getSeconds());
+    }, 1000);
+
+    
+    this.setPreference({ mapType });
+  },
   
   mounted() {
 
@@ -1626,7 +1385,6 @@ export default {
     
     // 参数获取
     this.planId =Number(this.$route.query.planId) 
-    this.jobId = Number(this.$route.query.jobId)
     this.starTime = this.$route.query.starTime
     this.flyDuration = this.$route.query.flyDuration
     this.landTime = this.$route.query.landTime
@@ -1647,14 +1405,10 @@ export default {
       this.getPlanJobs();
     }
 
-
   },
   beforeDestroy() {
     if (this.timer) {
       clearInterval(this.timer); // 在Vue实例销毁前，清除我们的定时器
-    }
-    if(this.timerPic){
-      clearInterval(this.timerPic);
     }
   }
   

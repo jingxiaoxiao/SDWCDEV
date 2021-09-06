@@ -47,8 +47,10 @@
         <el-table-column>
           <span slot="header" v-t="'plan.view.raw_data'"></span>
           <template v-slot="{ row }">
+            <!-- 下载链接 -->
+            {{row}}
             <template v-for="(blobId, name) of row.files">
-              <el-button :key="name" size="mini" @click="handleOpenFile(blobId)">{{ name }}</el-button>
+              <el-button :key="name" size="mini" @click="handleOpenFile(blobId)">{{ name }}-{{blobId}}</el-button>
             </template>
           </template>
         </el-table-column>
@@ -117,6 +119,8 @@ export default {
       runningContent(state) {
         /** @type {SDWC.PlanRunning} */
         const running = state.plan.running.find(r => r.id === this.plan.id);
+        console.log('图片图片mmm',running);
+        
         return running ? running.running : null;
       }
     }),
@@ -125,6 +129,11 @@ export default {
     },
     planToShow() {
       if (!this.isRunning) return this.plan;
+      console.log('图片ddd',Object.assign({}, this.plan, {
+        files: Object.assign({}, this.plan.files, this.runningContent.files),
+        extra: Object.assign({}, this.plan.extra, this.runningContent.extra)
+      }));
+      
       return Object.assign({}, this.plan, {
         files: Object.assign({}, this.plan.files, this.runningContent.files),
         extra: Object.assign({}, this.plan.extra, this.runningContent.extra)
@@ -133,6 +142,7 @@ export default {
     jobsToShow() {
       const { size, current } = this.pagination;
       const end = current * size;
+      console.log('图片-jobsToShow',this.jobs);
       return this.jobs.slice(end - size, end);
     }
   },
@@ -185,6 +195,7 @@ export default {
       }
       res.forEach(l => l.created_at = new Date(l.created_at));
       this.jobs = res;
+      console.log('图片-res',this.jobs);
       this.sortJobs();
       this.job.loading = false;
     },
@@ -205,6 +216,7 @@ export default {
           created_at: now,
           updated_at: now
         }, runningJob));
+        console.log('图片-官方-详细内容',jobs)
       } else {
         if (job.temporary) {
           job.files = runningJob.files;
@@ -212,6 +224,7 @@ export default {
         } else {
           job.files = Object.assign({}, job.files, runningJob.files);
           job.extra = Object.assign({}, job.extra, runningJob.extra);
+          
         }
       }
     },

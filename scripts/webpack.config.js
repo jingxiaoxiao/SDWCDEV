@@ -115,9 +115,16 @@ const cfg = {
       directory: P('/')
     },
     proxy: {
+      // 第一台服务器配置 
       '/gosd': {
         target: process.env.SUPERDOCK_API_SERVER || 'https://demo.sblab.xyz/gosd',
         pathRewrite: { '^/gosd':  '' },
+        changeOrigin: true
+      },
+      // 第二台服务器配置 
+      '/watwise_war': {
+        target: 'http://192.168.0.105:8080',
+        pathRewrite: { '^/watwise_war':  '/watwise_war' },
         changeOrigin: true
       }
     }

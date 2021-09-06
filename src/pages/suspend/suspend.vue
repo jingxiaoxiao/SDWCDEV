@@ -56,7 +56,7 @@
            </template> -->
 
           <!-- <p class="uav-start"  @click="goFlyPage" >飞行页面</p> -->
-          <!-- <p class="uav-start"  @click="ces" >测试跳转页面</p> -->
+          <!-- <p class="uav-start"  @click="ceshi()" >测试跳转页面</p> -->
        
           <p class="item-time"  v-if="countIsZoreShow">
             <!-- {{hour}}:{{min}}:{{second}} -->
@@ -576,6 +576,8 @@ export default {
       modeVal:false,
       // 自检失败，无法起飞
       noFlyShow: false,
+      // 执行任务的任务执行id
+      jobId:undefined
 
     }
   },
@@ -589,6 +591,7 @@ export default {
       /**
        * @param {SDWC.State} state
        * @returns {SDWC.PlanRunningContent}
+       * 执行飞行任务的历史任务信息
        */
       runningContent(state) {
         /** @type {SDWC.PlanRunning} */
@@ -626,7 +629,6 @@ export default {
       return this.drones[0].info.id
     },
     selectedNode() {
-      console.log('node-信息1',this.node);
       let nodeArr = this.node
       return this.node.find(node => node.info.id === this.droneVal);
     },
@@ -644,7 +646,6 @@ export default {
     },
     // 无人机id
     droneId() {
-      console.log('node-无人机信息11',this.drones);
       let droneOlny = undefined
       for (let d of this.drones) {
         droneOlny = d.info.id
@@ -653,7 +654,6 @@ export default {
     },
     // 机场id
     depotsId() {
-      console.log('node-机场信息11',this.depots);
       let depotsOlny = undefined
       for (let d of this.depots) {
         depotsOlny = d.info.id
@@ -672,7 +672,6 @@ export default {
     },
     // 机场信息
     selectedNodeDepot() {
-      console.log('信息：',this.node);
       return this.node.find(node => node.info.id === this.depotsId);
     },
     // 地图坐标
@@ -704,7 +703,7 @@ export default {
           item.name = "莱87井场"
         }
       })
-      // 需要添加地图上需要添加的坐标点及其名称
+      // 需要添加地图上需要添加井的坐标点及其名称
       let lngLatArr = [
         {
           id:'well11',
@@ -770,7 +769,6 @@ export default {
       depotMarkerList.forEach(itm => {
         markerList.push(itm)
       })
-      // console.log('井坐标',markerList);
       return [...markerList];
     },
     // 
@@ -815,12 +813,12 @@ export default {
       let modeVal = false
       // 机场
        for (let de of this.depots) {
+        //  机场-日志 de.msg
          if(de.msg.notification && de.msg.notification.length>0){
-           console.log('机场-日志',de.msg);
           de.msg.notification.map(le => {
             if((le.level == 3) && !this.isRunning){
               modeVal = true
-              console.log('无法起飞', le);
+              // 无法起飞 le
               this.noFlyShow = true
             }
           })
@@ -834,38 +832,27 @@ export default {
   },
   watch: {
     countSecond: {
+      //newValue 改变后的数据
+      //oldValue  改变前的数据
       handler(newValue,oldValue) {
         // 监听倒计时
         let djs = newValue.split(':')
-        // console.log('监听倒计时数组,',djs);
+        // 监听倒计时数组 djs
         if(djs[0] == '00'){
           if(djs[1]=='00'){
             if(djs[2]=='00'){
             this.countVoice('audio')
             this.handleExecute(1)
             this.countOver = true
-            // this.ces()
+            // this.ceshi()
             // this.getIndexPlan()
-            // this.ccss()
             
            }
           }
         }
         
-        //newValue 改变后的数据
-        //oldValue  改变前的数据
       }
-      //,deep: true
     }
-    // endDate:{
-    //   handler(newValue,oldValue) {
-    //     // 监听倒计时
-    //     this.countTime()
-    //     this.getIndexPlan()
-    //     this.ccss()
-        
-    //   }
-    // }
   },
   created() {
     // 刷新页面时，丢失数据，监听刷新，先存放在sessionStorage
@@ -915,10 +902,9 @@ export default {
       this.flyItem = []
     // }
 
-    console.log('飞行页面传回的planid是',this.$route.query);
+    // 飞行页面传回的信息
     this.flyStatus = this.$route.query.flyStatus
     this.flyId = Number(this.$route.query.planId)
-    console.log('飞行页面传回的',this.flyId);
     
     
     this.setPreference({ mapType });
@@ -928,11 +914,12 @@ export default {
     this.getEquipList()
     if(JSON.parse(sessionStorage.getItem("weather"))){
       this.weather =  JSON.parse(sessionStorage.getItem("weather"))
-      console.log('获取缓存中的天气信息',this.weather);
+      // 获取缓存中的天气信息 this.weather
+      
       // 清楚后只能刷新一次，不清楚就会有缓存
       // sessionStorage.removeItem("weather")
     }else{
-     console.log('缓存中没有天气信息，重新获取');
+    //  缓存中没有天气信息，重新获取
      this.getWeather()
     }
     
@@ -998,6 +985,7 @@ export default {
     // 任务列表
     async getIndexPlan(){
       const res = await indexPlan();
+      
       console.log('暂停页面-获取任务列',res)
       // 获取任务列
       let taskList = res
@@ -1033,9 +1021,9 @@ export default {
 
      
     },
-    // countIsZoreShow
+    // 点击当前行任务 countIsZoreShow
     handlerTask(row, event, column){
-      console.log('点击当前行任务',row);
+      // 倒计时测试-要执行的任务  = 点击当前行任务
       this.flyPlan = row
       console.log('倒计时测试-要执行的任务222',this.flyPlan);
       
@@ -1043,12 +1031,12 @@ export default {
       if(row.countIsZore == 0){
         this.countIsZoreShow = false
         this.nextInspection = row.name + '计划执行时间'
-        let mm = row.description
-        if(mm == ''){
+        let executionFlyTime = row.description
+        if(executionFlyTime == ''){
           return
         } else{
-          let mmArr = mm.split('.')
-          this.nextInspectionTime = mmArr[0] + ':' + mmArr[1]
+          let executionFlyTimeArr = executionFlyTime.split('.')
+          this.nextInspectionTime = executionFlyTimeArr[0] + ':' + executionFlyTimeArr[1]
         }
         
       } else{
@@ -1063,8 +1051,7 @@ export default {
     },
     // 装备使用装填
     getEquipList() {
-      // 机场 selectedNodeDepot
-      console.log('机场状态信息',this.selectedNodeDepot);
+      // 机场状态信息 selectedNodeDepot
       
       switch ( this.selectedNodeDepot.msg.depot_status.door )
       {
@@ -1102,9 +1089,7 @@ export default {
           this.equipLIstanbul[0].statusList[2].statusName ='充电器正常';
           break;
       }
-      // TODO 待草莓查看异常原因
-      console.log('机场异常',this.selectedNodeDepot.msg.depot_status.status);
-      
+      // 机场状态
       switch ( this.selectedNodeDepot.msg.depot_status.status )
       {
         case 'error':
@@ -1119,8 +1104,7 @@ export default {
           this.equipLIstanbul[0].statusList[3].statusName ='机场正常';
           break;
       }
-      // 无人机 selectedNodeDrons
-      console.log('无人机状态信息',this.selectedNodeDrons);
+      // 无人机状态信息 selectedNodeDrons
       
       switch ( this.selectedNodeDrons.msg.drone_status.status )
       {
@@ -1232,7 +1216,6 @@ export default {
       let execteTime = this.parseTime(this.currentDate,'{h}:{i}:{s}')
       var execteArr = execteTime.toString().split(':');
       let currentSecond = this.removeZero(execteArr[0])*3600 + this.removeZero(execteArr[1])*60 + this.removeZero(execteArr[2])
-      console.log('当前时间秒数是：', currentSecond);
       
 
       // 倒计时任务的index
@@ -1243,22 +1226,18 @@ export default {
         item.countIsZore = 0
         // 描述中的飞行时间
         if(item.description !== 0){
-          // 执行到几点=>秒
+          // 预定几点执行的时间=>秒
           let doArr = (item.description).toString().split('.')
           let doSecond = this.removeZero(doArr[0])*3600 +  this.removeZero(doArr[1])*60
-          console.log('列表规定秒数是;', doSecond);
           
-          // TODO 首先判断是否有正在执行的任务
-          // 无执行状态
-         
+          // 判断当前任务是否是飞行中的
           if(this.flyId == item.id){
+            // 执行完成
             if(this.flyStatus == '4'){
-              // console.log('有flyId且等于4-1');
                item.flyProcess = 100
             }else{
+              // 找寻下一条满足条件的任务进行倒计时执行
               if((doSecond > currentSecond) && (this.onTask.length == 0)) {
-                // console.log('有flyId且不等于4-2', this.flyStatus);
-                console.log('测试进入了吗1',item);
                 index = ind
                 item.countIsZore = 1
                 this.onTask.push(item)
@@ -1268,8 +1247,6 @@ export default {
            
           }else{
             if((doSecond > currentSecond) && (this.onTask.length == 0)) {
-              console.log('测试进入了吗2',item);
-              
               index = ind
               item.countIsZore = 1
               this.onTask.push(item)
@@ -1293,8 +1270,6 @@ export default {
       this.endDate = this.parseTime(this.currentDate,'{y}-{m}-{d}') +' '+ endArr[0].toString() + ':' + endArr[1].toString() + ':00' 
       // 若未点击执行任务,则结束日期即倒计时到达日期为下达任务时间
       this.$store.commit(EXE.SET_EXECUTE, this.endDate)
-
-      console.log('倒计时测试-结束时间',this.endDate);
       
 
       // 返航时间
@@ -1307,13 +1282,7 @@ export default {
       
       // 所有任务dataList
       dataList.forEach((itmm, indd) => {
-          // console.log('当前任务为：',itmm);
-          
-        // if(itmm.id == flyId){
-          
-        // }
         // 是否有正在执行的项目
-        // console.log('是否有正在执行的项目',this.hasRunning)
         if(!this.hasRunning){
           if(indd > index){
             itmm.flyProcess = 0
@@ -1353,8 +1322,6 @@ export default {
     },
     // 倒计时
     countTime() {
-      // console.log('进入倒计时dddd');
-      
       let now = new Date().getTime(); // 获取当前时间
       let endDate = new Date(this.endDate); // 设置截止时间
       let end = Number(endDate);
@@ -1402,10 +1369,6 @@ export default {
         this.flag = true;
       }
     },
-    ccss(){
-      console.log('执行任务1');
-      
-    },
     // 获取开始执行任务时间
     handleExecute(status) {
       // this.modeVal = false
@@ -1434,11 +1397,9 @@ export default {
         this.dialogShow = false
         this.loadingData = true
       }
-
     },
-    // 停飞
+    // 停飞 = 点击取消飞行
     handleStop() {
-      // console.log('点击取消飞行');
       
       this.allItem = []
       this.weatherItem = []
@@ -1458,6 +1419,7 @@ export default {
         title: this.flyPlan.name,
         message: this.$t('plan.view.pending'),
       });
+      
       cancelPlanJob(this.flyPlan.id, this.runningContent.id).then(() => {
         Object.assign(n.$data, {
           message: this.$t('plan.view.stop_run'),
@@ -1490,13 +1452,12 @@ export default {
             if(item.dialog.items.length !== 0){
               this.weatherItem = item.dialog.items;
             }
-            // console.log('暂停页面-所有天气item:', this.weatherItem)
           }
         } 
 
         // 航点检测获取
         if(item.dialog.buttons[1].name == "↑开始起飞↑"){
-          console.log('倒计时11');
+          this.jobId = this.runningContent.id
           // 确认是否起飞弹框-- 语音提示
           this.countVoice('sureFly')
           // 显示自带弹框
@@ -1611,14 +1572,14 @@ export default {
           // });
           this.$router.push({
             path: "/flying",
-            query: { planId: this.flyPlan.id, starTime:this.startTime, landTime:this.landTime, flyDuration:this.flyDuration },
+            query: { planId: this.flyPlan.id, jobId:this.jobId, starTime:this.startTime, landTime:this.landTime, flyDuration:this.flyDuration },
           });
         }
       }
     },
     // 测试页面跳转
     // TODO delete
-    ces(){
+    ceshi(){
       // 点击立即起飞  获取下达任务-日期
       let execteTime = this.parseTime((new Date()),'{y}-{m}-{d}') + ' ' + this.parseTime(this.currentDate,'{h}:{i}:{s}')
       // 下达任务时间 execteTime
@@ -1631,7 +1592,7 @@ export default {
 
           this.$router.push({
             path: "/flying",
-            query: { planId: this.flyPlan.id, starTime:this.startTime, landTime:this.landTime, flyDuration:this.endDate },
+            query: { planId: this.flyPlan.id, jobId:this.jobId, starTime:this.startTime, landTime:this.landTime, flyDuration:this.endDate },
           });
         }
        
@@ -1652,8 +1613,7 @@ export default {
     },
     // 倒计时语音提示
     countVoice(id){
-      console.log('倒计时');
-      console.log('倒计时id未：',id);
+      console.log('倒计时语音提示-id未：',id);
       document.getElementById(id).play()
     }
 

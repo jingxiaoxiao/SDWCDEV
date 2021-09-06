@@ -31,7 +31,7 @@ export default {
       type: Boolean,
       default: false
     },
-    imgUrl: {
+    yimageUrl: {
       type: String,
       default: function() {
         return '';
@@ -69,9 +69,9 @@ export default {
     if (this.imgShow) {
       this.show = this.imgShow
     }
-    if (this.imgUrl) {
-      this.picUrl = this.imgUrl
-      this.currentPic = this.imgUrl
+    if (this.yimageUrl) {
+      this.picUrl = this.yimageUrl
+      this.currentPic = this.yimageUrl
     }
     if (this.curInd) {
       console.log('序号', this.curInd);
@@ -84,11 +84,12 @@ export default {
       this.lastShow=false
       this.fistShow=false
     },
-    imgUrl(val) {
+    yimageUrl(val) {
       this.picUrl = val
       this.currentPic = val
     },
     curInd(val){
+      console.log('当前index:',this.currentIndex);
       this.currentIndex = val
     }
     },
@@ -97,9 +98,11 @@ export default {
         this.$emit('closeimg')
       },
       nextPic(){
+        console.log('下一个1:',this.list);
+        console.log('下一个2:',this.currentIndex);
         this.currentIndex = this.currentIndex + 1
         if(this.currentIndex<this.list.length){
-          this.currentPic = this.list[this.currentIndex].imgUrl
+          this.currentPic = this.list[this.currentIndex].yimageUrl
         }else{
           console.log('下一个没有了');
           this.lastShow=true
@@ -115,7 +118,7 @@ export default {
         console.log("上一个");
         this.currentIndex = this.currentIndex - 1
         if(this.currentIndex>=0){
-          this.currentPic = this.list[this.currentIndex].imgUrl
+          this.currentPic = this.list[this.currentIndex].yimageUrl
          
         }else{
           console.log('上一个没有了');
@@ -191,6 +194,10 @@ export default {
   cursor:default;
   opacity: 0.4;
 
+}
+/* el-message el-message--warning */
+.el-message.el-message--warning{
+  z-index: 99999999999!important;
 }
 
 </style>

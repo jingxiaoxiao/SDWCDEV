@@ -31,9 +31,17 @@ import JSONTreeView from 'vue-json-tree-view/src/index';
 import VueAwesomeSwiper from 'vue-awesome-swiper'
 import 'swiper/swiper-bundle.css'
 
+// axios
+// import axios from 'axios'
+
+
 Vue.use(JSONTreeView);
 
 Vue.use(VueAwesomeSwiper)
+
+// Vue.prototype.$axios = axios
+
+// axios.defaults.baseURL = '/watwise_war'
 
 const configurePromise = store.dispatch('configure');
 /**
