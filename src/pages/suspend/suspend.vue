@@ -1648,8 +1648,8 @@ export default {
 
 
 .suspend-page{
-  /* width:1920px; */
-  width:100%;
+  min-width:1920px;
+  /* width:100%; */
   background: url('assets/images/s-bg.png')no-repeat center center;
   background-size: cover;
   position: relative;

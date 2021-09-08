@@ -609,7 +609,7 @@ export default {
         if(newValue && newValue != 0 && newValue != oldValue ){
           if(this.picReady){
             if(this.jobs.length > 0){
-              console.log('图片-参数老值f新值t3');
+              console.log('图片-监听是否获取到下载链接id');
               this.postTask()
             }
           }
@@ -619,10 +619,10 @@ export default {
     // 是否处理完成
     isDealt:{
       handler(newValue,oldValue){
-        console.log('图片下载2：-监听计时器1')
+        console.log('图片下载2：-监听是否处理完成1')
          let that = this
         if(newValue){
-           console.log('图片下载2：监听计时器2-最新值',newValue)
+           console.log('图片下载2：监听是否处理完成2-最新值',newValue)
           // 调用接口
           that.getPicList()
         }
@@ -675,7 +675,7 @@ export default {
         },
         on:{
             tap: function () {
-              console.log('什么情况',_this.bannerList);
+              console.log('swiper什么情况',_this.bannerList);
               _this.imgShow = true
               _this.currInd = this.clickedIndex
               _this.picurl = _this.bannerList[this.clickedIndex].simageUrl
@@ -923,7 +923,7 @@ export default {
       let videoObj 
       this.selectedNodeDepot.info.points.map(point => {
         if(point.point_type_name == "livestream_webrtc2"){
-          console.log('视频',point);
+          // console.log('视频',point);
           const { id, point_type_name } = point;
           const compo = '';
           const key = `${nodeId}-${id}-${point_type_name}-${i++}`;
@@ -931,7 +931,7 @@ export default {
           // return { point, compo, key };
         }
       });
-      console.log('视频2',videoObj);
+      // console.log('视频2',videoObj);
       let videoArr = []
       videoArr.push(videoObj)
       return videoArr
@@ -1086,12 +1086,9 @@ export default {
           if(running.running.id == this.jobId &&  running.running.plan_id == this.planId){
             if(running.running.job.files != null){
               this.planH = running.running
-              console.log('图片，这是我们要的1',running.running.job.files);
-              console.log('图片，这是我们要的2',this.planH);
               if(running.running.job.files['下载链接']){
-                console.log('图片，you下载链接',running.running.job.files['下载链接']);
                 this.downId = Number(this.planH.job.files['下载链接']) 
-                console.log('图片，you下载链接2',this.downId);
+                console.log('图片，you下载链接',this.downId);
               }else{
                 console.log('图片，wu下载链接');
               }
@@ -1244,16 +1241,14 @@ export default {
       }
       
       console.log('页面无人机状态-zzz-当前',onHms);
+      // 当前时间和起飞/返航/降落时间做对比
       if(onHms < starHms){
         this.flyStatus = 1
       } else if(starHms < onHms < landHms){
-        console.log('页面无人机状态-zzz-起飞',starHms);
         this.flyStatus = 2
       } else if(landHms < onHms < durateHms){
-        console.log('页面无人机状态-zzz-返航',landHms);
         this.flyStatus = 3
       } else if(onHms > durateHms){
-        console.log('页面无人机状态-zzz-降落',durateHms);
         this.flyStatus = 4
       } else{
         this.flyStatus = 0
@@ -1443,7 +1438,7 @@ export default {
 　　    params: dataVal
       }).then(function (response) {
         that.isDealt = false
-        console.log('图片下载3：无数据再次调用接口',that.isDealt);
+        console.log('图片下载3：图片获取2-isDealt值',that.isDealt);
     　　console.log('图片下载3：图片获取3-返回值',response);
         let picList = []
         let hasVal = JSON.stringify(response.data) === '{}'? true : false
@@ -1477,7 +1472,7 @@ export default {
             },
             on:{
                 tap: function () {
-                  console.log('图片下载-什么情况5',picList[that.clickedIndex].simageUrl);
+                  console.log('图片下载-swiper什么情况5',picList[that.clickedIndex].simageUrl);
                   that.imgShow = true
                   that.currInd = that.clickedIndex
                   that.picurl = picList[that.clickedIndex].simageUrl
@@ -1501,16 +1496,12 @@ export default {
       });
       
     },
-    ccss(){
-      console.log('计时器调用一次');
-      
-    },
     // 获取具体任务下的图片集合
-    async picBlob(fileId) {
-      let mm = '231'
-      let res = await picBlob(mm);
-      console.log('图片：历史图片集合：', res)
-    },
+    // async picBlob(fileId) {
+    //   let mm = '231'
+    //   let res = await picBlob(mm);
+    //   console.log('图片：获取具体任务下的图片集合：', res)
+    // },
     // 2021-07-21航点
     async updateCurrentWaypoints() {
       const waypoints = [];
@@ -1637,7 +1628,7 @@ export default {
     
     this.getPlanWaypoints(this.plan).then(wp => {
       this.map = waypointsToMapProps(wp)
-      console.log('地图MMM',this.map);
+      // console.log('地图MMM',this.map);
     });
 
     this.processSatus()

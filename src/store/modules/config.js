@@ -14,7 +14,6 @@ const state = {
   gmap_key: '',
   mapbox_key: '',
   map_tiles_url: '',
-  caiyun_key: '',
   heweather_key: '',
   mqtt_url: ''
 };

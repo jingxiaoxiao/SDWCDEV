@@ -123,7 +123,8 @@ const cfg = {
       },
       // 第二台服务器配置 
       '/watwise_war': {
-        target: 'http://192.168.0.105:8080',
+        // target: 'http://192.168.0.105:8080',
+        target: 'http://192.168.9.92:8080',
         pathRewrite: { '^/watwise_war':  '/watwise_war' },
         changeOrigin: true
       }

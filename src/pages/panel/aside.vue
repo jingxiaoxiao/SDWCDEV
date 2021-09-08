@@ -71,13 +71,13 @@
          <el-menu-item
           :key="item.info.id"
           :index="`node-${item.info.id}`"
-          v-if="item.info.id === 1"
+          v-if="item.info.id === 88"
           :route="{ name: 'flying', params: { id: item.info.id } }"
         >{{ item.info.name }}</el-menu-item>
         <el-menu-item
           :key="item.info.id"
           :index="`node-${item.info.id}`"
-          v-else-if="item.info.id === 2"
+          v-else-if="item.info.id === 99"
           :route="{ name: 'suspend', params: { id: item.info.id } }"
         >{{ item.info.name }}</el-menu-item>
       </template>
@@ -108,13 +108,13 @@ export default {
       pageList:[
         {
           info:{
-            id:1,
+            id:88,
             name:'飞行'
           }
         },
         {
           info:{
-            id:2,
+            id:99,
             name:'暂停'
           }
         }
@@ -147,6 +147,8 @@ export default {
           return `plan-${id}`;
         case 'plan/new':
           return 'plan-new';
+        case 'sdwc':
+          return 'sdwc';
       }
       return '';
     },

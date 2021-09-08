@@ -2,13 +2,18 @@
   <div class="weather__column">
     <div class="weather__caption" v-t="'weather.wind.caption'"></div>
     <div class="weather__chart" ref="chart"></div>
+    <div class="weather__label ct-label">
+      <span>
+        <span>(m/s)&#32;</span>
+        <span v-t="'weather.min_before'"></span>
+      </span>
+      <span v-t="'weather.now'"></span>
+    </div>
   </div>
 </template>
 
 <script>
 import Chartist from 'chartist';
-
-import { h, hs } from '@/util/create-element';
 
 export default {
   name: 'sd-weather-wind',
@@ -92,21 +97,6 @@ export default {
           ]
         };
         this.chart = new Chartist.Line(this.$refs.chart, data, options);
-        // append unit and y axis label after chart created
-        this.chart.eventEmitter.addEventHandler('created', () => {
-          const labelCalss = { class: 'ct-label ct-horizontal ct-end' };
-          this.chart.svg._node.getElementsByClassName('ct-labels')[0].append(
-            hs('foreignObject', { x: 10, y: 130, height: 20, width: 30 }, [
-              h('span', labelCalss, ['(m/s)'])
-            ]),
-            hs('foreignObject', { x: 50, y: 130, height: 20, width: 100 }, [
-              h('span', labelCalss, [this.$t('weather.min_before')])
-            ]),
-            hs('foreignObject', { x: 560, y: 130, height: 20, width: 40 }, [
-              h('span', labelCalss, [this.$t('weather.now')])
-            ])
-          );
-        });
       } else {
         this.chart.update(data);
       }
@@ -130,11 +120,8 @@ export default {
     }
   },
   created() {
-    this.interval = null;
-  },
-  mounted() {
     this.chart = null;
-    this.draw();
+    this.interval = null;
   },
   beforeDestroy() {
     if (this.interval !== null) {
@@ -146,3 +133,14 @@ export default {
   }
 };
 </script>
+
+<style>
+.weather__label {
+  position: absolute;
+  bottom: 18px;
+  left: 17px;
+  right: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+</style>
